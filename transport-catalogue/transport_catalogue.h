@@ -20,12 +20,13 @@ namespace TransportCatalogue {
     struct Stop {
         std::string Name;
         Coordinates coordinates;
+        std::string RestQuery;
     };
     //автобусный маршрут
     struct Bus {
         std::string Name;
         std::vector<const Stop *> Stops;
-        bool cicle_route = 0;//1-маршрут кольцевой, 0-линейный
+        bool cicle_route = false;//1-маршрут кольцевой, 0-линейный
     };
     //пересечение с автобусными маршрутами
     struct StopAcrossToBuses {
@@ -43,7 +44,7 @@ namespace TransportCatalogue {
         std::pair<const Stop *, const Stop *> Stop_to_Stop;
     };
 
-    struct Stop_to_Stop_Hash {
+    struct StoptoStopHash {
 
         size_t operator()(const StopToStop &value) const {
 
@@ -64,7 +65,7 @@ namespace TransportCatalogue {
         explicit Stops() = default;
 
         //ф-я добавления остановки
-        void AddStop(std::tuple<std::string, double, double> tup);
+        void AddStop(const std::string &stopName, const Coordinates &coor);
 
         //ф-я поиска остановки
         const Stop *FindStop(const std::string &name) const;
@@ -92,19 +93,19 @@ namespace TransportCatalogue {
         explicit Buses(Stops *_stop);
 
         //ф-я добавления маршрута
-        void AddBus(std::string name, std::string name_stop);
+        void AddBus(const std::string& name, const std::vector<std::string>& stopsInBus);
 
         //ф-я поиска автобусного маршрута
-        Bus *FindBus(const std::string_view name) const;
+        Bus *FindBus(std::string_view name) const;
 
         //ф-я вставки расстояний между соседними остановками (географические)
-        void StopDistanceAdd(const std::string_view bus_name);
+        void SetStopDistance(std::string_view bus_name);
 
         //ф-я вставки расстояний между соседними остановками (фактические)
-        void StopLengthAdd(const void *contaner);
+        void SetStopLength(const void *container);
 
         //количество остановок на маршруте
-        int GetAmountStops(const std::string_view name) const;
+        int GetAmountStops(std::string_view name) const;
 
         //количество уникальных остановок на маршруте
         int GetAmountUniqueStops(std::string_view name) const;
@@ -113,19 +114,19 @@ namespace TransportCatalogue {
         std::pair<double, double> GetLengthRoute(std::string_view bus_name) const;
 
         //получение ссылки на контейнер хранения вычисленных расстояний
-        const std::unordered_map<StopToStop, std::pair<double, double>, Stop_to_Stop_Hash> &AsMapDistance() const;
+        const std::unordered_map<StopToStop, std::pair<double, double>, StoptoStopHash> &AsMapDistance() const;
 
         std::string ToString(std::string_view numb_bus) const;
 
     private:
         //ссылка на класс остановка
-        Stops *stops_;
+        Stops *stops_{};
         // контейнер маршрутов
         std::deque<Bus> buses_;
         //контейнер для быстрого поиска маршрутов
         std::unordered_map<std::string_view, Bus *> busname_to_bus;
         //контейнер для быстрого поиска расстояний между остановками
-        std::unordered_map<StopToStop, std::pair<double, double>, Stop_to_Stop_Hash> stop_to_stop_distance;
+        std::unordered_map<StopToStop, std::pair<double, double>, StoptoStopHash> stop_to_stop_distance;
     };
 
 

@@ -1,9 +1,11 @@
 #include "input_reader.h"
+#include "stat_reader.h"
 
 // напишите решение с нуля
 // код сохраните в свой git-репозиторий
-using namespace std;
-namespace loaddata {
+
+namespace inputReader {
+    using namespace std;
 
     string Lstrip(string line) {
         while (!line.empty() && isspace(line[0])) {
@@ -22,7 +24,7 @@ namespace loaddata {
         return line;
     }
 
-    pair <string, string> Split(string line, string by) {
+    pair<string, string> Split(const string &line, const string &by) {
         size_t pos = line.find(by);
         string left = Lstrip(Rstrip(line.substr(0, pos)));
 
@@ -35,14 +37,14 @@ namespace loaddata {
 
     void ListQueryIn::AddQueryItem(std::string &line, Attributes *atr_container, AttributesOut *atrout_container) {
         //cout << line << endl;
-        string str_key = "";
-        string str_value = "";
-        for (auto c = line.begin(); c != line.end(); c++) {
+        string str_key;
+        string str_value;
+        for (char &c: line) {
 
             if (str_key != "Stop" && str_key != "Bus") {
-                str_key += *c;
+                str_key += c;
             } else {
-                str_value += *c;
+                str_value += c;
             }
 
         }
@@ -68,7 +70,7 @@ namespace loaddata {
         return attrs_.size();
     }
 
-    AttributesOut &ListQueryIn::AsMapOut() {
+    ListQueryIn::AttributesOut &ListQueryIn::AsMapOut() {
         return attrs_out;
     }
 
@@ -76,7 +78,7 @@ namespace loaddata {
         return attrs_out.size();
     }
 
-    vector <std::tuple<const void *, std::string, double>> &ListQueryIn::AsMapLength() {
+    vector<std::tuple<const void *, std::string, double>> &ListQueryIn::AsMapLength() {
         return attrs_length;
     }
 
@@ -84,28 +86,123 @@ namespace loaddata {
         
     }*/
 
-    std::tuple<std::string, double, double, std::string> get_stops(string &line) {
-        auto [val1, val2] = Split(line, ":");
-        auto [lat, val3] = Split(val2, ",");
-        auto [lng, val4] = Split(val3, ",");
+    TransportCatalogue::Stop get_stops(string &line) {
+        TransportCatalogue::Stop stop;
+        auto [stopName, stopQuery] = Split(line, ":");
+        auto [lat, stopQueryWithoutLat] = Split(stopQuery, ",");
+        auto [lng, stopQueryLength] = Split(stopQueryWithoutLat, ",");
 
         //throw std::invalid_argument("id");
 
         ///std::cout.precision(20);
-        return std::make_tuple(Rstrip(Lstrip(val1)), std::stod(lat), std::stod(lng), val4);
+        stop.Name = Rstrip(Lstrip(stopName));
+        stop.coordinates.lat = std::stod(lat);
+        stop.coordinates.lng = std::stod(lng);
+        stop.RestQuery = stopQueryLength;
+        return stop;
     }
+
+    struct refForPar {
+        inputReader::ListQueryIn *list_queryIn;
+        TransportCatalogue::Buses *buses;
+        TransportCatalogue::Stops *stopS;
+    };
+
+    void AddStopBus(refForPar *ref) {
+            //проверка на условие того, что контейнер запросов не пуст
+
+            if (!ref->list_queryIn->AsMapIn().empty()) {
+                //проверка на наличие запросов на добавление остановок
+                if (ref->list_queryIn->AsMapIn().count("Stop") > 0) {
+                    //цикл запросов добавления остановок
+                    for (auto query: ref->list_queryIn->AsMapIn().at("Stop")) {
+                        auto stName = get_stops(query).Name;
+                        auto coor = get_stops(query).coordinates;
+                        auto restQuery = get_stops(query).RestQuery;
+                        //cout.precision(8);
+                        //auto bb = get_stops(query);
+                        /*cout<< &std::get<0>(bb) <<endl;
+                        cout<< std::get<1>(bb) <<endl;
+                        cout<< std::get<2>(bb) <<endl;*/
+                        ref->stopS->AddStop(stName, coor);
+                        const auto *reff = ref->stopS->FindStop(stName);
+                        if (!restQuery.empty()) {
+                            //cout<< "reff = " << reff << endl;
+                            pair<string, string> value;
+                            string next_line = restQuery;
+                            while (true) {
+                                //cout << "next_line = " << next_line << endl;
+                                value = Split(next_line, ",");
+                                auto [length_, name_stop] = Split(value.first, "m to ");
+                                ref->list_queryIn->AsMapLength().emplace_back(reff, name_stop, std::stod(length_));
+
+                                if (value.second == string()) {
+                                    break;
+                                }
+                                next_line = value.second;
+                            }
+                        }
+                        //cout<< grade2  <<" " <<name2 <<endl;
+                    }
+                }
+                if (ref->list_queryIn->AsMapIn().count("Stop") > 0) {
+                    //цикл запросов добавления остановок в маршрут
+                    string line_stops;
+                    for (const auto &query: ref->list_queryIn->AsMapIn().at("Bus")) {
+                        bool cicle_route = false;
+                        pair<string, string> value;
+                        auto [bus_number, line_stops] = Split(query, ":");
+                        //cout << bus_number << "=" << endl;
+                        std::vector<std::string> stopsInBus;
+                        while (true) {
+
+                            if (line_stops.find_first_of('>') != std::string::npos) {
+                                cicle_route = true;
+                                value = Split(line_stops, ">");
+
+                                //cout << value.first<< endl;
+                            } else if (line_stops.find_last_not_of('-') != std::string::npos) {
+                                value = Split(line_stops, "-");
+                                //cout << value.first<< endl;
+                            } else {
+                                break;
+                            }
+                            stopsInBus.push_back(value.first);
+                            //buses.AddBus(bus_number, value.first);
+                            line_stops = value.second;
+                            //cout << value.first << "|" << value.second << endl;
+                            if (value.second.empty()) {
+                                break;
+                            }
+                        }
+                        ref->buses->AddBus(bus_number, stopsInBus);
+                        //ф-я вставки расстояний между соседними остановками
+                        ref->buses->SetStopDistance(bus_number);
+                        ref->buses->FindBus(bus_number)->cicle_route = cicle_route;
+                        //stops.AddStop(get_stops(query));
+                        //cout<< "buses:"<< bus_number  <<endl;
+                    }
+                }
+            }
+    };
+
+
 
     void LoadLine(std::istream &input) {
         int count_;
         TransportCatalogue::Stops stops;
         TransportCatalogue::Buses buses(&stops);
         ListQueryIn list_queryIn;
+        refForPar references{};
+        references.list_queryIn = &list_queryIn;
+        references.stopS = &stops;
+        references.buses = &buses;
         StatReader::Print Print(&buses, &stops);
 
         while (!input.eof()) {
 
             input >> count_;
-            string line = "";
+            string line;
             getline(input, line);
 
             for (int i = 0; i < count_; i++) {
@@ -114,7 +211,7 @@ namespace loaddata {
                 //cout << line << endl;
                 line = Lstrip(line);
 
-                if (line.size() > 0 && line.find_first_of(':') != std::string::npos) {
+                if (!line.empty() && line.find_first_of(':') != std::string::npos) {
 
                     list_queryIn.AddQueryItem(line, &list_queryIn.AsMapIn(), nullptr);
 
@@ -122,113 +219,17 @@ namespace loaddata {
                     list_queryIn.AddQueryItem(line, nullptr, &list_queryIn.AsMapOut());
                 }
             }
-
         }//while(!input.eof())
 
+        AddStopBus(&references);
 
-        //проверка на условие того, что контейнер запросов не пуст
-        if (!list_queryIn.AsMapIn().empty()) {
-            //проверка на наличие запросов на добавление остановок
-            if (list_queryIn.AsMapIn().count("Stop") > 0) {
-                //цикл запросов добавления остановок
-                for (auto query: list_queryIn.AsMapIn().at("Stop")) {
-
-                    //cout.precision(8);
-                    auto bb = get_stops(query);
-                    /*cout<< &std::get<0>(bb) <<endl;
-                    cout<< std::get<1>(bb) <<endl;
-                    cout<< std::get<2>(bb) <<endl;*/
-                    stops.AddStop(std::make_tuple((std::get<0>(bb)), std::get<1>(bb), std::get<2>(bb)));
-                    const auto *reff = stops.FindStop(std::get<0>(bb));
-                    if (std::get<3>(bb).size()) {
-                        //cout<< "reff = " << reff << endl;
-                        pair<string, string> value;
-                        string next_line = std::get<3>(bb);
-                        while (true) {
-                            //cout << "next_line = " << next_line << endl;
-                            value = Split(next_line, ",");
-                            auto [length_, name_stop] = Split(value.first, "m to ");
-                            list_queryIn.AsMapLength().push_back(make_tuple(reff, name_stop, std::stod(length_)));
-
-                            if (value.second == string()) {
-                                break;
-                            }
-                            next_line = value.second;
-                        }
-                    }
-                    //cout<< grade2  <<" " <<name2 <<endl;
-                }
-            }
-            if (list_queryIn.AsMapIn().count("Stop") > 0) {
-                //цикл запросов добавления остановок в маршрут
-                string line_stops = "";
-                for (auto query: list_queryIn.AsMapIn().at("Bus")) {
-                    bool cicle_route = false;
-                    pair<string, string> value;
-                    auto [bus_number, line_stops] = Split(query, ":");
-                    //cout << bus_number << "=" << endl;
-
-                    while (true) {
-
-                        if (line_stops.find_first_of(">") != std::string::npos) {
-                            cicle_route = true;
-                            value = Split(line_stops, ">");
-
-                            //cout << value.first<< endl;
-                        } else if (line_stops.find_last_not_of('-') != std::string::npos) {
-                            value = Split(line_stops, "-");
-                            //cout << value.first<< endl;
-                        } else {
-                            break;
-                        }
-                        buses.AddBus(bus_number, value.first);
-                        line_stops = value.second;
-                        //cout << value.first << "|" << value.second << endl;
-                        if (value.second == string()) {
-                            break;
-                        }
-                    }
-                    //ф-я вставки расстояний между соседними остановками
-                    buses.StopDistanceAdd(bus_number);
-                    buses.FindBus(bus_number)->cicle_route = cicle_route;
-                    //stops.AddStop(get_stops(query));
-                    //cout<< "buses:"<< bus_number  <<endl;
-                }
-            }
-        }
         //проверка на условие того, что контейнер расстояний между соседними остановками не пуст
-        if (!list_queryIn.AsMapLength().empty() && list_queryIn.AsMapLength().size() > 0) {
-            buses.StopLengthAdd(&list_queryIn.AsMapLength());
+        if (!list_queryIn.AsMapLength().empty() && !list_queryIn.AsMapLength().empty()) {
+            buses.SetStopLength(&list_queryIn.AsMapLength());
         }
         //проверка на условие того, что контейнер запросов не пуст
-        if (!list_queryIn.AsMapOut().empty() && list_queryIn.AsMapOut().size() > 0) {
-            string _name = "";
-            for (auto &query: list_queryIn.AsMapOut()) {
-                _name = Lstrip(Rstrip(query.second));
-
-                if (query.first == "Bus") {
-                    Print.PrintValueBus(_name);
-                } else if (query.first == "Stop") {
-                    Print.PrintValueStop(_name);
-                }
-            }
-
-
-            /*
-            if(list_queryIn.AsMapOut().find("Bus") != list_queryIn.AsMapOut().end()){
-              for(auto query:list_queryIn.AsMapOut().at("Bus")){
-                    string _name = Lstrip(Rstrip(query));
-                    Print.PrintValueBus(_name);
-               }
-            }
-            if(list_queryIn.AsMapOut().find("Stop") != list_queryIn.AsMapOut().end()){
-              for(auto query:list_queryIn.AsMapOut().at("Stop")){
-                    string _name = Lstrip(Rstrip(query));
-                    Print.PrintValueStop(_name);
-               }
-            }
-          */
-
+        if(!list_queryIn.AsMapOut().empty() && list_queryIn.AsMapOut().size() > 0) {
+            Print.PrintValues(&list_queryIn.AsMapOut());
         }
     }
 }

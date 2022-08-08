@@ -4,10 +4,11 @@
 using namespace std;
 
 #include "input_reader.h"
+#include "stat_reader.h"
 
 int main() {
 
-    /*std::istringstream input{
+    std::istringstream input{
 "15 \n"
 "Stop Tolstopaltsevo: 55.611087, 37.20829, 3900m to Marushkino \n"
 "Stop Rossoshanskaya ulitsa: 55.595579, 37.605757 \n"
@@ -31,9 +32,9 @@ int main() {
 "Stop Prazhskaya \n"
 "Stop Biryulyovo Zapadnoye\n"
 "Bus 256 \n"
-};*/
+};
 
-    loaddata::LoadLine(cin);
+    inputReader::LoadLine(input);
 
 
     return 0;
