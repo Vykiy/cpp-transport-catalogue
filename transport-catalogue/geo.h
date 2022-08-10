@@ -1,12 +1,18 @@
 #pragma once
 
 #include <cmath>
+#include <numeric>
+
+inline bool IsEqualDouble(double dbl, double otherDbl) {
+    double eps = 0.0000001;
+    return (fabs(dbl - otherDbl) <= eps);
+}
 
 struct Coordinates {
     double lat; //latitude (широта) 
     double lng; //longitude (долгота) 
     bool operator==(const Coordinates &other) const {
-        return lat == other.lat && lng == other.lng;
+        return (IsEqualDouble(lat, other.lat) && IsEqualDouble(lng, other.lng));
     }
 
     bool operator!=(const Coordinates &other) const {

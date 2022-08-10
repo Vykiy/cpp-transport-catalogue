@@ -18,39 +18,35 @@
 namespace TransportCatalogue {
     //остановка
     struct Stop {
-        std::string Name;
+        std::string name;
         Coordinates coordinates;
-        std::string RestQuery;
+        std::string rest_query;
     };
     //автобусный маршрут
     struct Bus {
-        std::string Name;
-        std::vector<const Stop *> Stops;
+        std::string name;
+        std::vector<const Stop *> stops;
         bool cicle_route = false;//1-маршрут кольцевой, 0-линейный
     };
     //пересечение с автобусными маршрутами
     struct StopAcrossToBuses {
-        std::string_view Name;
-        std::unordered_set<const Bus *> Buses;
+        std::string_view name;
+        std::unordered_set<const Bus *> buses;
     };
 
     //переменная ссылок на координаты соседних остановок для хранения в контейнере
     struct StopToStop {
-
         bool operator==(const StopToStop &other) const {
-            return Stop_to_Stop.first == other.Stop_to_Stop.first && Stop_to_Stop.second == other.Stop_to_Stop.second;
+            return stop_to_stop.first == other.stop_to_stop.first && stop_to_stop.second == other.stop_to_stop.second;
         }
 
-        std::pair<const Stop *, const Stop *> Stop_to_Stop;
+        std::pair<const Stop *, const Stop *> stop_to_stop;
     };
 
     struct StoptoStopHash {
-
         size_t operator()(const StopToStop &value) const {
-
-            size_t h_stop1 = d_hasher_(value.Stop_to_Stop.first);
-            size_t h_stop2 = d_hasher_(value.Stop_to_Stop.second);
-
+            size_t h_stop1 = d_hasher_(value.stop_to_stop.first);
+            size_t h_stop2 = d_hasher_(value.stop_to_stop.second);
             return h_stop1 * (37u) + h_stop2 * (37u * 37u);
         }
 
@@ -65,7 +61,7 @@ namespace TransportCatalogue {
         explicit Stops() = default;
 
         //ф-я добавления остановки
-        void AddStop(const std::string &stopName, const Coordinates &coor);
+        void AddStop(const std::string &name_stop, const Coordinates &coor);
 
         //ф-я поиска остановки
         const Stop *FindStop(const std::string &name) const;
@@ -93,7 +89,7 @@ namespace TransportCatalogue {
         explicit Buses(Stops *_stop);
 
         //ф-я добавления маршрута
-        void AddBus(const std::string& name, const std::vector<std::string>& stopsInBus);
+        void AddBus(const std::string &name, const std::vector<std::string> &stopsInBus);
 
         //ф-я поиска автобусного маршрута
         Bus *FindBus(std::string_view name) const;
@@ -128,6 +124,4 @@ namespace TransportCatalogue {
         //контейнер для быстрого поиска расстояний между остановками
         std::unordered_map<StopToStop, std::pair<double, double>, StoptoStopHash> stop_to_stop_distance;
     };
-
-
 }

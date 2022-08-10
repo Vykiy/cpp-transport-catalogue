@@ -20,16 +20,15 @@ namespace StatReader {
 
         explicit Print(Buses *_buses, Stops *_stops);
 
-        void PrintValueBus(std::string_view numb_bus);
+        void PrintBus(std::string_view numb_bus);
 
-        void PrintValueStop(std::string_view name_stop);
+        void PrintStop(std::string_view name_stop);
 
-        void PrintValues(ListQueryIn::AttributesOut* attr);
+        void PrintValues(ListQueryIn::AttributesOut *attr);
 
     private:
         //ссылка на класс остановка
         Buses *buses_;
         Stops *stops_;
     };
-
-}//namespace StatReader
+}

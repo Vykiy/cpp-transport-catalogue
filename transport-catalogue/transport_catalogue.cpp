@@ -5,7 +5,6 @@
 
 
 namespace TransportCatalogue {
-
     using namespace std;
 
     //ф-я добавления остановки
@@ -14,18 +13,15 @@ namespace TransportCatalogue {
 
         if (stopname_to_stop.find(stopName) == stopname_to_stop.end()) {
             Stop stop_;
-            stop_.Name = stopName;
+            stop_.name = stopName;
             stop_.coordinates.lat = coor.lat;
             stop_.coordinates.lng = coor.lng;
             stops_.push_back(stop_);
             size_t item_ = stops_.size() - 1;
             //вставка ссылки на структуру Stop
-            stopname_to_stop[stops_[item_].Name] = &stops_[item_];
-            //cout<<  stops_[item_].Name<< endl;
+            stopname_to_stop[stops_[item_].name] = &stops_[item_];
             //вставка в контейнер для быстрого поиска остановок с перечением маршрутов
-            AddStopAccrossingBus(stops_[item_].Name, "");
-            //cout << FindStop(std::get<0>(tup))->Name << endl;
-            //cout << stop_.Name << " " << stop_.coordinates.lat<< " " << stop_.coordinates.lng << endl;
+            AddStopAccrossingBus(stops_[item_].name, "");
         }
 
     }
@@ -42,12 +38,8 @@ namespace TransportCatalogue {
 
     //ф-я поиска остановки
     const Stop *Stops::FindStop(const std::string &name) const {
-        /* cout<<  stopname_to_stop.size()<< endl;
-          for(auto eee:stopname_to_stop){
-                cout<< eee.first << endl;
-            }*/
+
         if (stopname_to_stop.find(name) != stopname_to_stop.end()) {
-            //std::cout << "true" << endl;
             return stopname_to_stop.at(name);
         }
 
@@ -61,10 +53,8 @@ namespace TransportCatalogue {
     Bus *Buses::FindBus(const std::string_view name) const {
 
         if (busname_to_bus.find(name) != busname_to_bus.end()) {
-            //std::cout << "true" << endl;
             return busname_to_bus.at(name);
         }
-        //std::cout << "false" << endl;
         return nullptr;
     }
 
@@ -72,32 +62,31 @@ namespace TransportCatalogue {
         //вставка остановки
         if (FindBus(name) == nullptr) {
             Bus bus_;
-            bus_.Name = name;
+            bus_.name = name;
             buses_.push_back(bus_);
             //вставка ссылки на структуру Bus
             size_t item_ = buses_.size() - 1;
-            busname_to_bus[buses_[item_].Name] = &buses_[item_];
+            busname_to_bus[buses_[item_].name] = &buses_[item_];
             //контейнер для быстрого поиска остановок с перечением маршрутов
             //std::unordered_map<std::string_view, StopAcrossToBuses*> stopname_to_bus;
-
         }
         for (const auto &name_stop: stopsInBus) {
             const Stop *stp = stops_->FindStop(name_stop);
             Bus *bus = FindBus(name);
             //Вставка остановок в контейнер Stops структуры Bus
-            bus->Stops.push_back(stp);
+            bus->stops.push_back(stp);
             //вставка в контейнер для быстрого поиска остановок с перечением маршрутов
-            stops_->AddStopAccrossingBus(stp->Name, bus->Name);
+            stops_->AddStopAccrossingBus(stp->name, bus->name);
         }
     }
 
     //ф-я вставки расстояний между соседними остановками
-    void Buses::SetStopDistance(const std::string_view bus_name) { //для чего передавать все три параметра, когда в функцию уже передается автобус который итерируется по контейнеру
+    void Buses::SetStopDistance(
+            const std::string_view bus_name) { //логика действия такая: мы же считаем расстояние между остановками на маршруте, поэтому и передаём название маршрута
         auto bus_ = FindBus(bus_name);
 
-        for (auto stops = (bus_->Stops).begin(); stops != (bus_->Stops).end() - 1;) {
-            //cout<< "----"<< endl;
-            //cout<< (*stops)->Name << "|" << (*(stops + 1))->Name << endl;
+        for (auto stops = (bus_->stops).begin(); stops != (bus_->stops).end() - 1;) {
+
             StopToStop s_t_s;
             pair<double, double> lenght_;
             double distance = 0;
@@ -105,17 +94,14 @@ namespace TransportCatalogue {
             Coordinates to = (*(stops + 1))->coordinates;
             //прямой порядок
             distance = ComputeDistance(from, to);
-            s_t_s.Stop_to_Stop = make_pair((*stops), (*(stops + 1)));
+            s_t_s.stop_to_stop = make_pair((*stops), (*(stops + 1)));
             lenght_ = make_pair(distance, 0.0);
             stop_to_stop_distance[s_t_s] = lenght_;
             //обратный порядок
-            s_t_s.Stop_to_Stop = make_pair((*(stops + 1)), (*stops));
+            s_t_s.stop_to_stop = make_pair((*(stops + 1)), (*stops));
             distance = ComputeDistance(to, from);
             lenght_ = make_pair(distance, 0.0);
             stop_to_stop_distance[s_t_s] = lenght_;
-
-            //cout<< distance<< endl;
-            //cout<< "----"<< endl;
             stops += 1;
         }
     }
@@ -125,13 +111,12 @@ namespace TransportCatalogue {
         auto *ptr = (vector<tuple<void *, string, double>> *) container;
         if (!ptr->empty() && ptr->size() > 0) {
             for (auto &tuple_val: (*ptr)) {
-                StopToStop s_t_s;
-                s_t_s.Stop_to_Stop = make_pair(((Stop *) (std::get<0>(tuple_val))),
-                                               (stops_->FindStop(std::get<1>(tuple_val))));
-                auto itr = stop_to_stop_distance.find(s_t_s);
-                //cout << s_t_s.Stop_to_Stop.first->Name << "|" << s_t_s.Stop_to_Stop.second->Name <<endl;
+                StopToStop stopToStop;
+                stopToStop.stop_to_stop = make_pair(((Stop *) (std::get<0>(tuple_val))),
+                                                    (stops_->FindStop(std::get<1>(tuple_val))));
+                auto itr = stop_to_stop_distance.find(stopToStop);
                 if (itr != stop_to_stop_distance.end()) {
-                    stop_to_stop_distance[s_t_s].second = std::get<2>(tuple_val);
+                    stop_to_stop_distance[stopToStop].second = std::get<2>(tuple_val);
                 }
             }
         }
@@ -146,17 +131,15 @@ namespace TransportCatalogue {
     int Buses::GetAmountStops(const std::string_view bus_name) const {
         auto bus = FindBus(bus_name);
         if (!bus->cicle_route) {
-            return ((bus->Stops).size()) * 2 - 1;
+            return ((bus->stops).size()) * 2 - 1;
         }
-
-        return (bus->Stops).size();
+        return (bus->stops).size();
     }
 
     //количество уникальных остановок на маршруте
     int Buses::GetAmountUniqueStops(string_view numb_bus) const {
         std::unordered_set<const Stop *> stop_counting;
-        for (auto stops: FindBus(numb_bus)->Stops) {
-
+        for (auto stops: FindBus(numb_bus)->stops) {
             stop_counting.insert(stops);
         }
         return stop_counting.size();
@@ -169,12 +152,12 @@ namespace TransportCatalogue {
         double geoLen = 0;
         const auto &dist = AsMapDistance();
 
-        for (auto stp = bus->Stops.begin(); stp != (bus->Stops).end() - 1;) {
+        for (auto stp = bus->stops.begin(); stp != (bus->stops).end() - 1;) {
             StopToStop stopTo;
             StopToStop stopFrom;
-            stopTo.Stop_to_Stop = make_pair(*stp,
+            stopTo.stop_to_stop = make_pair(*stp,
                                             *(stp + 1)); //прямой порядок от stop_from(*stp) до stop_to(*(stp + 1))
-            stopFrom.Stop_to_Stop = make_pair(*(stp + 1),
+            stopFrom.stop_to_stop = make_pair(*(stp + 1),
                                               *stp); //обратный порядок от stop_to(*(stp + 1)) до  stop_from(*stp)
             double geoLenTo = dist.at(stopTo).first; //географическое расстояние прямого порядка
             double factLenTo = dist.at(stopTo).second; //фактическое расстояние прямого порядка
@@ -197,9 +180,12 @@ namespace TransportCatalogue {
         return make_pair(factLen, (factLen / geoLen));
     }
 
-    string Stops::ToString(string_view name_stop) const {
+
+    //для ООП характерно наличие ToString у любого класса
+    string Stops::ToString(
+            string_view name_stop) const { //метод конвертации в строку, метод печати находится в stat_reader -> PrintStop
         ostringstream out;
-        bool first = false;
+        bool first = true;
         if (stop_accross_to_bus.find(name_stop) == stop_accross_to_bus.end()) {
             out << " not found";
             return out.str();
@@ -210,20 +196,19 @@ namespace TransportCatalogue {
         out << " buses ";
         for (auto &str: stop_accross_to_bus.at(name_stop)) {
 
-            if (!first) {
+            if (first) {
                 out << str;
-                first = true;
+                first = false;
             } else {
                 out << " " << str;
             }
-
-
         }
         out << " ";
         return out.str();
     }
 
-    string Buses::ToString(string_view numb_bus) const {
+    string Buses::ToString(
+            string_view numb_bus) const { //метод конвертации в строку, метод печати находится в stat_reader -> PrintBus
         ostringstream out;
         auto resault = FindBus(numb_bus);
         if (resault == nullptr) {
@@ -235,8 +220,6 @@ namespace TransportCatalogue {
                 << setprecision(6) << rout_l_c.first << " route length, "
                 << rout_l_c.second << " curvature";
         }
-        //out << " ";
         return out.str();
     }
-
 }
