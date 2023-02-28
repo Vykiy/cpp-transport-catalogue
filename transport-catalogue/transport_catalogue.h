@@ -1,127 +1,63 @@
 #pragma once
 
-#include <iostream>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <sstream>
-#include <vector>
-#include <set>
-#include <deque>
-#include <iomanip>
 #include "geo.h"
-// напишите решение с нуля
-// код сохраните в свой git-репозиторий
-//transport_catalogue.h
+#include "domain.h"
 
-namespace TransportCatalogue {
-    //остановка
-    struct Stop {
-        std::string name;
-        Coordinates coordinates;
-        std::string rest_query;
-    };
-    //автобусный маршрут
-    struct Bus {
-        std::string name;
-        std::vector<const Stop *> stops;
-        bool cicle_route = false;//1-маршрут кольцевой, 0-линейный
-    };
-    //пересечение с автобусными маршрутами
-    struct StopAcrossToBuses {
-        std::string_view name;
-        std::unordered_set<const Bus *> buses;
-    };
+#include <string>
+#include <list>
+#include <unordered_set>
+#include <vector>
+#include <tuple>
+#include <deque>
+#include <unordered_map>
+#include <algorithm>
+#include <set>
+#include <cmath>
+#include <utility>
 
-    //переменная ссылок на координаты соседних остановок для хранения в контейнере
-    struct StopToStop {
-        bool operator==(const StopToStop &other) const {
-            return stop_to_stop.first == other.stop_to_stop.first && stop_to_stop.second == other.stop_to_stop.second;
-        }
+namespace tr_cat {
+    namespace aggregations {
+        using namespace std::string_literals;
 
-        std::pair<const Stop *, const Stop *> stop_to_stop;
-    };
+        class TransportCatalogue {
+        public:
+            void AddStop (std::string_view name, geo::Coordinates coords);
+            void AddBus (std::string_view name, std::vector<std::string_view>& stops, const bool is_ring);
+            void AddDistance(const std::string_view lhs, const std::string_view rhs, double distance);
+            std::optional<const Bus*>  GetBusInfo (std::string_view name) const;
+            std::optional<const Stop*> GetStopInfo (std::string_view name) const;
+            auto begin() const {return buses_.begin();}
+            auto end() const {return buses_.end();}
+            size_t size() const {return buses_.size();}
+            size_t empty() const {return buses_.empty();}
+        private:
+            class DistanceHasher {
+            public:
+                size_t operator() (const std::pair<const Stop*, const Stop*> element) const {
+                    const size_t shift = (size_t)log2(1 + sizeof(Stop));
+                    const size_t result = (size_t)(element.first) >> shift;
+                    return result + ((size_t)(element.second) >> shift) * 37;
+                }
+            };
+            class DistanceCompare {
+            public:
+                bool operator() (const std::pair<const Stop*, const Stop*> lhs, const std::pair<const Stop*, const Stop*> rhs) const {
+                    return lhs.first == rhs.first && rhs.second == lhs.second;
+                }
+            };
 
-    struct StoptoStopHash {
-        size_t operator()(const StopToStop &value) const {
-            size_t h_stop1 = d_hasher_(value.stop_to_stop.first);
-            size_t h_stop2 = d_hasher_(value.stop_to_stop.second);
-            return h_stop1 * (37u) + h_stop2 * (37u * 37u);
-        }
+            std::unordered_map<std::pair<const Stop*, const Stop*>, int, DistanceHasher, DistanceCompare> distances_;
+            std::deque<Stop> stops_data_;
+            std::deque<Bus> buses_data_;
+            std::unordered_map<std::string_view, Stop*> stops_container_;
+            std::unordered_map<std::string_view, Bus*> buses_container_;
+            std::vector<std::string_view> buses_;
 
-    private:
-        std::hash<const void *> d_hasher_;
-    };
-
-
-    class Stops {
-    public:
-        //конструктор по умолчанию
-        explicit Stops() = default;
-
-        //ф-я добавления остановки
-        void AddStop(const std::string &name_stop, const Coordinates &coor);
-
-        //ф-я поиска остановки
-        const Stop *FindStop(const std::string &name) const;
-
-        //ф-я добавления ссылки на автобус
-        void AddStopAccrossingBus(std::string_view name_stop, std::string_view name_bus);
-
-        //формирование списка автобусов
-        std::string ToString(std::string_view name_stop) const;
-
-    private:
-        // контейнер остановок
-        std::deque<Stop> stops_;
-        //контейнер для быстрого поиска остановок
-        std::unordered_map<std::string_view, Stop *> stopname_to_stop;
-        //контейнер для быстрого поиска остановок с перечением маршрутов
-        std::unordered_map<std::string_view, std::set<std::string_view>> stop_accross_to_bus;
-    };
-
-    class Buses {
-    public:
-        //конструктор по умолчанию
-        explicit Buses() = default;
-
-        explicit Buses(Stops *_stop);
-
-        //ф-я добавления маршрута
-        void AddBus(const std::string &name, const std::vector<std::string> &stopsInBus);
-
-        //ф-я поиска автобусного маршрута
-        Bus *FindBus(std::string_view name) const;
-
-        //ф-я вставки расстояний между соседними остановками (географические)
-        void SetStopDistance(std::string_view bus_name);
-
-        //ф-я вставки расстояний между соседними остановками (фактические)
-        void SetStopLength(const void *container);
-
-        //количество остановок на маршруте
-        int GetAmountStops(std::string_view name) const;
-
-        //количество уникальных остановок на маршруте
-        int GetAmountUniqueStops(std::string_view name) const;
-
-        //длина маршрута
-        std::pair<double, double> GetLengthRoute(std::string_view bus_name) const;
-
-        //получение ссылки на контейнер хранения вычисленных расстояний
-        const std::unordered_map<StopToStop, std::pair<double, double>, StoptoStopHash> &AsMapDistance() const;
-
-        std::string ToString(std::string_view numb_bus) const;
-
-    private:
-        //ссылка на класс остановка
-        Stops *stops_{};
-        // контейнер маршрутов
-        std::deque<Bus> buses_;
-        //контейнер для быстрого поиска маршрутов
-        std::unordered_map<std::string_view, Bus *> busname_to_bus;
-        //контейнер для быстрого поиска расстояний между остановками
-        std::unordered_map<StopToStop, std::pair<double, double>, StoptoStopHash> stop_to_stop_distance;
-    };
-}
+            int ComputeRouteDistance (std::string_view name) const;
+            double ComputeGeoRouteDistance (std::string_view name) const;
+            int GetDistance(const Stop* lhs, const Stop* rhs) const;
+            Stop* FindStop (std::string_view name) const;
+            Bus* FindBus (std:: string_view name)const;
+        };
+    }//aggregations
+}//tr_cat
