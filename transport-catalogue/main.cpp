@@ -13,5 +13,4 @@ int main() {
     aggregations::TransportCatalogue catalog;
     interface::JsonReader reader(catalog);
     Process(reader);
-    //tests::Test();
 }

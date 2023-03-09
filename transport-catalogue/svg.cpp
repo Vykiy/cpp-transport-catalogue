@@ -21,19 +21,20 @@ std::ostream& operator<< (std::ostream& out, StrokeLineCap elem) {
 
 std::ostream& operator<< (std::ostream& out, StrokeLineJoin elem) {
     switch (elem) {
-    case StrokeLineJoin::ARCS:
+        using enum svg::StrokeLineJoin;
+    case ARCS:
         out << "arcs"sv;
         break;
-    case StrokeLineJoin::BEVEL:
+    case BEVEL:
         out << "bevel"sv;
         break;
-    case StrokeLineJoin::MITER:
+    case MITER:
         out << "miter"sv;
         break;
-    case StrokeLineJoin::MITER_CLIP:
+    case MITER_CLIP:
         out << "miter-clip"sv;
         break;
-    case StrokeLineJoin::ROUND:
+    case ROUND:
         out << "round"sv;
         break;
     }
@@ -46,7 +47,7 @@ struct PrintColor {
     void operator() (std::monostate) {
         out << "none"sv;
     }
-    void operator() (std::string& color) {
+    void operator() (std::string const& color) {
         out << color;
     }
     void operator() (Rgb color) {
@@ -134,17 +135,17 @@ Text& Text::SetFontSize(uint32_t size) {
     return *this;
 }
 
-Text& Text::SetFontFamily(std::string font_family) {
+Text& Text::SetFontFamily(std::string_view font_family) {
     font_family_ = font_family;
     return *this;
 }
 
-Text& Text::SetFontWeight(std::string font_weight) {
+Text& Text::SetFontWeight(std::string_view font_weight) {
     font_weight_ = font_weight;
     return *this;
 }
 
-Text& Text::SetData(std::string data) {
+Text& Text::SetData(std::string_view data) {
     data_ = data;
     return *this;
 }
@@ -169,7 +170,7 @@ void Text::RenderObject(const RenderContext& context) const {
         case '"':
             out << "&quot;"sv;
             break;
-        case 39: //символ '
+        case '\'': //символ '
             out << "&apos;"sv;
             break;
         case '<':
@@ -183,6 +184,7 @@ void Text::RenderObject(const RenderContext& context) const {
             break;
         default:
             out << c;
+            break;
         }
     }
     out << "</text>"sv;
@@ -198,9 +200,9 @@ void Document::Render(std::ostream& out) const {
     RenderContext context(out, 1);
     out << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"sv << std::endl;
     out << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">"sv << std::endl;
-    for (const std::unique_ptr<Object>& obj : objects_) {
+    for (const auto &object : objects_) {
         context.Indented().RenderIndent();
-        obj->Render(context);
+        object->Render(context);
     }
     out << "</svg>"sv;
 }

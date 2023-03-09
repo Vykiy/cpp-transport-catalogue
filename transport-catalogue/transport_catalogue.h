@@ -14,18 +14,18 @@
 #include <set>
 #include <cmath>
 #include <utility>
+#include <optional>
 
-namespace tr_cat {
-    namespace aggregations {
+namespace tr_cat::aggregations {
         using namespace std::string_literals;
 
         class TransportCatalogue {
         public:
             void AddStop (std::string_view name, geo::Coordinates coords);
-            void AddBus (std::string_view name, std::vector<std::string_view>& stops, const bool is_ring);
-            void AddDistance(const std::string_view lhs, const std::string_view rhs, double distance);
-            std::optional<const Bus*>  GetBusInfo (std::string_view name) const;
-            std::optional<const Stop*> GetStopInfo (std::string_view name) const;
+            void AddBus (std::string_view name, std::vector<std::string_view>& stops, bool is_ring);
+            void AddDistance(std::string_view lhs, std::string_view rhs, double distance);
+            std::optional<const Bus>  GetBusInfo (std::string_view name) const;
+            std::optional<const Stop> GetStopInfo (std::string_view name) const;
             auto begin() const {return buses_.begin();}
             auto end() const {return buses_.end();}
             size_t size() const {return buses_.size();}
@@ -34,14 +34,14 @@ namespace tr_cat {
             class DistanceHasher {
             public:
                 size_t operator() (const std::pair<const Stop*, const Stop*> element) const {
-                    const size_t shift = (size_t)log2(1 + sizeof(Stop));
+                    const auto shift = (size_t)log2(1 + sizeof(Stop));
                     const size_t result = (size_t)(element.first) >> shift;
                     return result + ((size_t)(element.second) >> shift) * 37;
-                }
+                } //подглядел по результатам бенчмарка тут https://stackoverflow.com/questions/20953390/what-is-the-fastest-hash-function-for-pointers
             };
             class DistanceCompare {
             public:
-                bool operator() (const std::pair<const Stop*, const Stop*> lhs, const std::pair<const Stop*, const Stop*> rhs) const {
+                bool operator() (const std::pair<const Stop*, const Stop*> &lhs, const std::pair<const Stop*, const Stop*> &rhs) const {
                     return lhs.first == rhs.first && rhs.second == lhs.second;
                 }
             };
@@ -59,5 +59,4 @@ namespace tr_cat {
             Stop* FindStop (std::string_view name) const;
             Bus* FindBus (std:: string_view name)const;
         };
-    }//aggregations
-}//tr_cat
+    }//tr_cat

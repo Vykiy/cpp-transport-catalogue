@@ -1,46 +1,45 @@
 #include "request_handler.h"
 
-namespace tr_cat {
-    namespace interface {
+namespace tr_cat::interface {
         using namespace std;
 
-        void RequestInterface::AddStops () {
-            std::for_each(stops_.begin(), stops_.end(), [&](StopInput& stop) {catalog_.AddStop(stop.name, stop.coordinates);});
-        }
+    void RequestInterface::AddStops () {
+        std::ranges::for_each(stops_, [&](StopInput const& stop) {catalog_.AddStop(stop.name, stop.coordinates);});
+    }
 
-        void RequestInterface::AddDistances () {
-            for (auto& [lhs, stops] : distances_) {
-                for (auto& [rhs, value] : stops) {
-                    catalog_.AddDistance(lhs, rhs, value);
-                }
+    void RequestInterface::AddDistances () {
+        for (auto const& [lhs, stops] : distances_) {
+            for (auto const& [rhs, value] : stops) {
+                catalog_.AddDistance(lhs, rhs, value);
             }
         }
+    }
 
-        void RequestInterface::AddBuses () {
-            std::for_each(buses_.begin(), buses_.end(), [&](BusInput& bus) {catalog_.AddBus(bus.name, bus.stops, bus.is_ring);});
-        }
+    void RequestInterface::AddBuses () {
+        std::ranges::for_each(buses_, [&](BusInput& bus) {catalog_.AddBus(bus.name, bus.stops, bus.is_ring);});
+    }
 
         void RequestInterface::GetAnswers() {
 
             for (const Stat& stat : stats_) {
                 if (stat.type == "Bus"s) {
-                    optional<const Bus*> bus = catalog_.GetBusInfo(stat.name);
+                    optional<const Bus> bus = catalog_.GetBusInfo(stat.name);
                     if (!bus) {
-                        answers_.push_back(stat.id);
+                        answers_.emplace_back(stat.id);
                         continue;
                     }
-                    answers_.push_back(BusOutput{stat.id, *bus});
+                    answers_.emplace_back(BusOutput{stat.id, bus});
 
                 } else if (stat.type == "Stop"s) {
-                    optional<const Stop*> stop = catalog_.GetStopInfo(stat.name);
+                    optional<const Stop> stop = catalog_.GetStopInfo(stat.name);
                     if (!stop) {
-                        answers_.push_back(stat.id);
+                        answers_.emplace_back(stat.id);
                         continue;
                     }
-                    answers_.push_back(StopOutput{stat.id, *stop});
+                    answers_.emplace_back(StopOutput{stat.id, stop});
 
                 } else if (stat.type == "Map"s) {
-                    answers_.push_back(MapOutput(stat.id, catalog_));
+                    answers_.emplace_back(MapOutput(stat.id, catalog_));
 
                 } else {
                     throw invalid_argument ("Invalid Stat"s);
@@ -57,5 +56,4 @@ namespace tr_cat {
             reader.PrintAnswers();
         }
 
-    }//interface
-}//tr_cat
+    }//tr_cat

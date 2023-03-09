@@ -3,9 +3,9 @@
 #include "geo.h"
 
 #include <ostream>
+#include <utility>
 
-namespace tr_cat {
-    namespace render {
+namespace tr_cat::render {
 
         inline bool IsZero(double value) {
             return std::abs(value) < EPSILON;
@@ -87,10 +87,10 @@ namespace tr_cat {
             double line_width = 0;
             double stop_radius = 0;
 
-            double bus_label_font_size = 0;
+            int bus_label_font_size = 0;
             svg::Point bus_label_offset {0, 0};
 
-            double stop_label_font_size = 0;
+            int stop_label_font_size = 0;
             svg::Point stop_label_offset {0, 0};
 
             svg::Color underlayer_color;
@@ -99,19 +99,14 @@ namespace tr_cat {
 
         };
 
-        struct CoordinatesHasher {
-            size_t operator() (const geo::Coordinates& coords) const {
-                return std::hash<double>{}(coords.lat) + std::hash<double>{}(coords.lng)*37;
-            }
-        };
 
         class MapRenderer {
         public:
             MapRenderer() = delete;
-            MapRenderer(const aggregations::TransportCatalogue& catalog, const RenderSettings& settings)
-            :catalog_(catalog), settings_(settings) {}
-            MapRenderer(const aggregations::TransportCatalogue& catalog, const RenderSettings& settings, std::ostream& output)
-            :catalog_(catalog), settings_(settings), output_(output) {}
+            MapRenderer(const aggregations::TransportCatalogue& catalog, RenderSettings  settings)
+            :catalog_(catalog), settings_(std::move(settings)) {}
+            MapRenderer(const aggregations::TransportCatalogue& catalog, RenderSettings  settings, std::ostream& output)
+            :catalog_(catalog), settings_(std::move(settings)), output_(output) {}
 
             void Render();
 
@@ -119,11 +114,10 @@ namespace tr_cat {
             const aggregations::TransportCatalogue& catalog_;
             RenderSettings settings_;
             std::ostream& output_ = std::cout;
-            std::unordered_set<geo::Coordinates, CoordinatesHasher> CollectCoordinates () const;
-            std::pair<std::unique_ptr<svg::Text>, std::unique_ptr<svg::Text>> AddBusLabels(SphereProjector& project, 
+            std::vector<geo::Coordinates> CollectCoordinates () const;
+            std::pair<std::unique_ptr<svg::Text>, std::unique_ptr<svg::Text>> AddBusLabels(const SphereProjector& project,
                                                             int index_color, const Stop* stop, std::string_view name);
-            std::set<std::string_view> RenderBuses(SphereProjector& project, svg::Document& doc_to_render);
-            void RenderStops(SphereProjector& project, svg::Document& doc_to_render, std::set<std::string_view> stops_in_buses);
+            std::set<std::string_view> RenderBuses(const SphereProjector& project, svg::Document& doc_to_render);
+            void RenderStops(const SphereProjector& project, svg::Document& doc_to_render, const std::set<std::string_view>& stops_in_buses);
         };
-    }//render
-}//tr_cat
+    }//tr_cat
