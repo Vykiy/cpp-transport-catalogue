@@ -128,35 +128,32 @@ namespace json {
             return s;
         }
 
-        Node LoadNull(istream &input) {
+        Node LoadNull(istream& input) {
             string s;
-            for (char c; input >> c;) {
-                if (c > ' ') {
-                    s.push_back(c);
-                }
+            char c;
+            for (int i = 0; input >> c && i < 4; ++i) {
+                s += c;
             }
-            if (s.empty() || s == "null"s) {
-                return nullptr;
-            } else {
+            if (s != "null"s) {
                 throw ParsingError("Unexpected value"s);
             }
+            return {};
         }
 
-        Node LoadBool(istream &input) {
+        Node LoadBool(istream& input) {
             string s;
-            for (char c; input >> c;) {
-                if (c > ' ') {
-                    s.push_back(c);
-                }
-            }
+            char c;
+
+            for (; input >> c && s.size() < 5 && c != 'e';s += c);
+            s += c;
+
             if (s == "true"s) {
-                return true;
+                return {true};
             }
             if (s == "false"s) {
-                return false;
-            } else {
-                throw ParsingError("Unexpected value"s);
+                return {false};
             }
+            throw ParsingError("Unexpected value"s);
         }
 
         Node LoadArray(istream &input) {
@@ -186,7 +183,7 @@ namespace json {
 
                 string key = LoadString(input).AsString();
                 input >> c;
-                result.insert({move(key), LoadNode(input)});
+                result.insert({std::move(key), LoadNode(input)});
             }
 
             if (c != '}') {
@@ -290,7 +287,7 @@ namespace json {
 //----------------------------------------------Document---------------------------------------
 
     Document::Document(Node root)
-            : root_(move(root)) {
+            : root_(std::move(root)) {
     }
 
 
@@ -332,19 +329,19 @@ namespace json {
         for (char c: value) {
             switch (c) {
                 case '"':
-                    ctx.out << "\\\""sv;
+                    ctx.out << R"(\")";
                     break;
                 case '\n':
-                    ctx.out << "\\n"sv;
+                    ctx.out << R"(\n)";
                     break;
                 case '\t':
-                    ctx.out << "\t"sv;
+                    ctx.out << R"(\t)";
                     break;
                 case '\r':
-                    ctx.out << "\\r"sv;
+                    ctx.out << R"(\r)";
                     break;
                 case '\\':
-                    ctx.out << "\\\\"sv;
+                    ctx.out << R"(\\)";
                     break;
                 default:
                     ctx.out << c;

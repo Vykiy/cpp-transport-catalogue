@@ -134,19 +134,19 @@ namespace svg {
             using namespace std::literals;
 
             if (fill_color_) {
-                out << " fill=\""sv << *fill_color_ << "\""sv;
+                out << R"( fill=")" << *fill_color_ << R"(")";
             }
             if (stroke_color_) {
-                out << " stroke=\""sv << *stroke_color_ << "\""sv;
+                out << R"( stroke=")" << *stroke_color_ << R"(")";
             }
             if (stroke_width_) {
-                out << " stroke-width=\""sv << *stroke_width_ << "\""sv;
+                out << R"( stroke-width=")" << *stroke_width_ << R"(")";
             }
             if (stroke_linecap_) {
-                out << " stroke-linecap=\""sv << *stroke_linecap_ << "\""sv;
+                out << R"( stroke-linecap=")" << *stroke_linecap_ << R"(")";
             }
             if (stroke_linejoin_) {
-                out << " stroke-linejoin=\""sv << *stroke_linejoin_ << "\""sv;
+                out << R"( stroke-linejoin=")" << *stroke_linejoin_ << R"(")";
             }
         }
 

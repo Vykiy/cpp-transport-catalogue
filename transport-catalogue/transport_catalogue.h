@@ -22,7 +22,7 @@ namespace tr_cat::aggregations {
         class TransportCatalogue {
         public:
             void AddStop (std::string_view name, geo::Coordinates coords);
-            void AddBus (std::string_view name, std::vector<std::string_view>& stops, bool is_ring);
+            void AddBus (std::string_view name, std::vector<std::string> stops, bool is_ring);
             void AddDistance(std::string_view lhs, std::string_view rhs, double distance);
             std::optional<const Bus>  GetBusInfo (std::string_view name) const;
             std::optional<const Stop> GetStopInfo (std::string_view name) const;

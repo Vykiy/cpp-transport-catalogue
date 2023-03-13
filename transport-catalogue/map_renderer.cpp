@@ -93,21 +93,21 @@ namespace tr_cat::render {
                 stops_in_buses.insert(stop->name);
             }
 
-            bus_lines.push_back(move(line));
-            bus_labels.push_back(move(bus_underlabel_start));
-            bus_labels.push_back(move(bus_label_start));
+            bus_lines.push_back(std::move(line));
+            bus_labels.push_back(std::move(bus_underlabel_start));
+            bus_labels.push_back(std::move(bus_label_start));
             if (bus_label_finish && bus_underlabel_finish) {
-                bus_labels.push_back(move(bus_underlabel_finish));
-                bus_labels.push_back(move(bus_label_finish));
+                bus_labels.push_back(std::move(bus_underlabel_finish));
+                bus_labels.push_back(std::move(bus_label_finish));
             }
             ++index_color;
         }
 
         for (auto &pointer: bus_lines) {
-            doc_to_render.AddPtr(move(pointer));
+            doc_to_render.AddPtr(std::move(pointer));
         }
         for (auto &pointer: bus_labels) {
-            doc_to_render.AddPtr(move(pointer));
+            doc_to_render.AddPtr(std::move(pointer));
         }
         return stops_in_buses;
     }
@@ -149,16 +149,16 @@ namespace tr_cat::render {
                             "Verdana"s)
                                                         .SetFillColor("black"s));
 
-            stop_points.push_back(move(stop_point));
-            stop_labels.push_back(move(stop_underlabel));
-            stop_labels.push_back(move(stop_label));
+            stop_points.push_back(std::move(stop_point));
+            stop_labels.push_back(std::move(stop_underlabel));
+            stop_labels.push_back(std::move(stop_label));
         }
 
         for (auto &pointer: stop_points) {
-            doc_to_render.AddPtr(move(pointer));
+            doc_to_render.AddPtr(std::move(pointer));
         }
         for (auto &pointer: stop_labels) {
-            doc_to_render.AddPtr(move(pointer));
+            doc_to_render.AddPtr(std::move(pointer));
         }
     }
 }//tr_cat

@@ -52,7 +52,7 @@ namespace tr_cat::interface {
 
             struct BusInput {
                 std::string_view name;
-                std::vector<std::string_view> stops;
+                std::vector<std::basic_string<char>> stops;
                 bool is_ring;
             };
             struct StopInput {

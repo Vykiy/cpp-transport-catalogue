@@ -13,10 +13,10 @@ namespace tr_cat::interface {
         }
         auto &it = document_.GetRoot().AsMap();
         ParseBase(const_cast<json::Node &>(it.at("base_requests"s)));
-        if (it.contains("stat_requests"s) && (it.at("stat_requests"s).IsArray())) {
+        if (it.count("stat_requests"s) && (it.at("stat_requests"s).IsArray())) {
             ParseStats(const_cast<json::Node &>(it.at("stat_requests"s)));
         }
-        if (it.contains("render_settings"s)) {
+        if (it.count("render_settings"s)) {
             ParseRenderSettings(const_cast<json::Node &>(it.at("render_settings"s)));
         }
 
@@ -37,7 +37,7 @@ namespace tr_cat::interface {
                 stops_.back().coordinates.lat = element.at("latitude"s).AsDouble();
                 stops_.back().coordinates.lng = element.at("longitude"s).AsDouble();
 
-                if (element.contains("road_distances"s)) {
+                if (element.count("road_distances"s)) {
                     auto &map_distances = element.at("road_distances"s).AsMap();
                     for (auto &[name, value]: map_distances) {
                         distances_[stops_.back().name].emplace_back(name, value.AsInt());
@@ -72,7 +72,7 @@ namespace tr_cat::interface {
 
         for (auto &element_node: stats) {
             auto &element = element_node.AsMap();
-            if (element.contains("name"s)) {
+            if (element.count("name"s)) {
                 stats_.push_back(
                         {element.at("id"s).AsInt(), element.at("type"s).AsString(), element.at("name"s).AsString()});
             } else {
@@ -86,32 +86,32 @@ namespace tr_cat::interface {
 
         auto &settings = settings_node.AsMap();
 
-        if (settings.contains("width"s)) {
+        if (settings.count("width"s)) {
             render_settings_.width = settings.at("width"s).AsDouble();
         }
-        if (settings.contains("height"s)) {
+        if (settings.count("height"s)) {
             render_settings_.height = settings.at("height"s).AsDouble();
         }
-        if (settings.contains("padding"s)) {
+        if (settings.count("padding"s)) {
             render_settings_.padding = settings.at("padding"s).AsDouble();
         }
-        if (settings.contains("line_width"s)) {
+        if (settings.count("line_width"s)) {
             render_settings_.line_width = settings.at("line_width"s).AsDouble();
         }
-        if (settings.contains("stop_radius"s)) {
+        if (settings.count("stop_radius"s)) {
             render_settings_.stop_radius = settings.at("stop_radius"s).AsDouble();
         }
-        if (settings.contains("bus_label_font_size"s)) {
+        if (settings.count("bus_label_font_size"s)) {
             render_settings_.bus_label_font_size = settings.at("bus_label_font_size"s).AsDouble();
         }
-        if (settings.contains("bus_label_offset"s)) {
+        if (settings.count("bus_label_offset"s)) {
             auto it = settings.at("bus_label_offset"s).AsArray();
             render_settings_.bus_label_offset = {it[0].AsDouble(), it[1].AsDouble()};
         }
-        if (settings.contains("stop_label_font_size"s)) {
+        if (settings.count("stop_label_font_size"s)) {
             render_settings_.stop_label_font_size = settings.at("stop_label_font_size"s).AsDouble();
         }
-        if (settings.contains("stop_label_offset"s)) {
+        if (settings.count("stop_label_offset"s)) {
             auto it = settings.at("stop_label_offset"s).AsArray();
             render_settings_.stop_label_offset = {it[0].AsDouble(), it[1].AsDouble()};
         }
@@ -127,14 +127,14 @@ namespace tr_cat::interface {
             }
         };
 
-        if (settings.contains("underlayer_color"s)) {
+        if (settings.count("underlayer_color"s)) {
             get_color(settings.at("underlayer_color"s), render_settings_.underlayer_color);
         }
-        if (settings.contains("underlayer_width"s)) {
+        if (settings.count("underlayer_width"s)) {
             render_settings_.underlayer_width = settings.at("underlayer_width"s).AsDouble();
         }
 
-        if (settings.contains("color_palette"s)) {
+        if (settings.count("color_palette"s)) {
             auto &array = settings.at("color_palette"s).AsArray();
             render_settings_.color_palette.reserve(array.size());
             for (auto &node: array) {
@@ -169,7 +169,7 @@ namespace tr_cat::interface {
     json::Node JsonReader::CreateNode::operator()(StopOutput &value) {
         json::Array buses;
         for (string_view bus: value.stop->buses) {
-            buses.push_back(std::move(static_cast<string>(bus)));
+            buses.push_back(static_cast<string>(bus));
         }
         return json::Dict{{"buses"s,      buses},
                           {"request_id"s, value.id}};

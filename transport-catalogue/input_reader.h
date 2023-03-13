@@ -1,49 +1,76 @@
 #pragma once
 
-#include <istream>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <vector>
-#include <set>
 #include "transport_catalogue.h"
 
-// напишите решение с нуля
-// код сохраните в свой git-репозиторий
-namespace inputReader {
+#include <iostream>
 
-    void LoadLine(std::istream &input);
+namespace tr_cat {
+    namespace aggregations {
 
-    using Attributes = std::unordered_map<std::string, std::vector<std::string>>;
+        class InputReader {
 
-    std::string Lstrip(std::string line);
+        public:
 
-    std::string Rstrip(std::string line);
+            explicit InputReader(TransportCatalogue& catalog)
+            :catalog_(catalog){}
 
-    class ListQueryIn {
-    public:
+            explicit InputReader(TransportCatalogue& catalog, std::istream& input)
+            :input_(input), catalog_(catalog){}
 
-        ListQueryIn() = default;
+            void ParseBase() {
+                ParseBase(input_);
+            }
 
-        using AttributesOut = std::vector<std::pair<std::string, std::string>>;
+            void ParseBase(std::istream& input);
 
-        static void AddQueryItem(std::string &line, Attributes *atr_container, AttributesOut *atrout_container);
+            void AddBuses() {
+                AddBuses(catalog_);
+            }
 
-        Attributes &AsMapIn();
+            void AddBuses(TransportCatalogue& catalog);
 
-        AttributesOut &AsMapOut();
+            void AddStops() {
+                AddStops(catalog_);
+            }
 
-        std::vector<std::tuple<const void *, std::string, double>> &AsMapLength();
+            void AddStops(TransportCatalogue& catalog);
 
-        size_t GetSizeMapIn() const;
+            void AddDistances() {
+                AddDistances(catalog_);
+            }
 
-        size_t GetSizeMapOut() const;
+            void AddDistances(TransportCatalogue& catalog);
 
-    private:
-        Attributes attrs_;
-        std::vector<std::tuple<const void *, std::string, double>> attrs_length;
-        AttributesOut attrs_out;
-    };
-}
+        private:
+
+            struct BusInput {
+                std::string name;
+                std::vector <std::string> stops;
+                bool is_ring;
+            };
+
+            struct StopInput {
+                std::string name;
+                geo::Coordinates coordinates;
+                std::vector<std::pair<std::string, int>> distances;
+            };
+
+            std::istream& input_ = std::cin;
+            std::vector<StopInput> stops_;
+            std::vector<BusInput> buses_;
+
+            TransportCatalogue& catalog_;
+
+            void ParseBus (std::string line);
+
+            void ParseStop(std::string line);
+
+        };
+    }//aggregations
+
+
+
+    void ReadBase(aggregations::TransportCatalogue& catalog, std::istream& input);
+
+    void ReadBase(aggregations::TransportCatalogue& catalog);
+}//tr_cat

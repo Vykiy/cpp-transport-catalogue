@@ -1,196 +1,135 @@
 #include "input_reader.h"
-#include "stat_reader.h"
 
-// напишите решение с нуля
-// код сохраните в свой git-репозиторий
+namespace tr_cat {
+    namespace aggregations {
 
-namespace inputReader {
-    using namespace std;
+        using namespace std::string_literals;
 
-    string Lstrip(string line) {
-        while (!line.empty() && isspace(line[0])) {
-            line.erase(0, 1);
-        }
-        return line;
-    }
+        void InputReader::ParseBase(std::istream& input) {
+            int n;
+            input >> n;
 
-    string Rstrip(string line) {
-        std::size_t found = line.find_last_not_of(' ');
-        if (found != std::string::npos) {
-            line.erase(found + 1, line.size() - found);
-        }
-        return line;
-    }
-
-    pair<string, string> Split(const string &line, const string &separator) {
-        size_t pos = line.find(separator);
-        string left = Lstrip(Rstrip(line.substr(0, pos)));
-
-        if (pos < line.size() && pos + separator.size() < line.size()) {
-            return {left, Rstrip(Lstrip(line.substr(pos + separator.size())))};
-        } else {
-            return {left, string()};
-        }
-    }
-
-    void ListQueryIn::AddQueryItem(std::string &line, Attributes *atr_container, AttributesOut *atrout_container) {
-        string str_key;
-        string str_value;
-        for (char &c: line) {
-
-            if (str_key != "Stop" && str_key != "Bus") {
-                str_key += c;
-            } else {
-                str_value += c;
+            {
+                std::string _;
+                getline(input, _);
             }
 
-        }
-
-        if (str_key == "Stop" || str_key == "Bus") {
-            if (atr_container != nullptr) {
-                (*atr_container)[str_key].push_back(str_value);
-            } else if (atrout_container != nullptr) {
-                (*atrout_container).push_back(make_pair(str_key, str_value));
-            }
-        }
-    }
-
-    Attributes &ListQueryIn::AsMapIn() {
-        return attrs_;
-    }
-
-    size_t ListQueryIn::GetSizeMapIn() const {
-        return attrs_.size();
-    }
-
-    ListQueryIn::AttributesOut &ListQueryIn::AsMapOut() {
-        return attrs_out;
-    }
-
-    size_t ListQueryIn::GetSizeMapOut() const {
-        return attrs_out.size();
-    }
-
-    vector<std::tuple<const void *, std::string, double>> &ListQueryIn::AsMapLength() {
-        return attrs_length;
-    }
-
-    TransportCatalogue::Stop GetStops(string &line) {
-        TransportCatalogue::Stop stop;
-        auto [stop_name, stop_query] = Split(line, ":");
-        auto [lat, stop_query_without_lat] = Split(stop_query, ",");
-        auto [lng, stop_query_length] = Split(stop_query_without_lat, ",");
-
-        stop.name = Rstrip(Lstrip(stop_name));
-        stop.coordinates.lat = std::stod(lat);
-        stop.coordinates.lng = std::stod(lng);
-        stop.rest_query = stop_query_length;
-        return stop;
-    }
-
-    struct refForPar {
-        inputReader::ListQueryIn *list_queryIn;
-        TransportCatalogue::Buses *buses;
-        TransportCatalogue::Stops *stops;
-    };
-
-    void AddStopBus(refForPar *ref) {
-        //проверка на условие того, что контейнер запросов не пуст
-        if (!ref->list_queryIn->AsMapIn().empty()) {
-            //проверка на наличие запросов на добавление остановок
-            if (ref->list_queryIn->AsMapIn().count("Stop") > 0) {
-                //цикл запросов добавления остановок
-                for (auto query: ref->list_queryIn->AsMapIn().at("Stop")) {
-                    TransportCatalogue::Stop stop = GetStops(query);
-                    ref->stops->AddStop(stop.name, stop.coordinates);
-                    const auto *reff = ref->stops->FindStop(stop.name);
-                    if (!stop.rest_query.empty()) {
-                        pair<string, string> temp_rest_query_for_parsing;
-                        string next_line = stop.rest_query;
-                        while (true) {
-                            temp_rest_query_for_parsing = Split(next_line, ",");
-                            auto [length_, name_stop] = Split(temp_rest_query_for_parsing.first, "m to ");
-                            ref->list_queryIn->AsMapLength().emplace_back(reff, name_stop, std::stod(length_));
-                            if (temp_rest_query_for_parsing.second.empty()) {
-                                break;
-                            }
-                            next_line = temp_rest_query_for_parsing.second;
-                        }
-                    }
-                }
-            }
-            if (ref->list_queryIn->AsMapIn().count("Stop") > 0) {
-                //цикл запросов добавления остановок в маршрут
-                string line_stops;
-                for (const auto &query: ref->list_queryIn->AsMapIn().at("Bus")) {
-                    bool cicle_route = false;
-                    pair<string, string> temp_for_parsing_route;
-                    auto [bus_number, line_stops] = Split(query, ":");
-                    std::vector<std::string> stopsInBus;
-                    while (true) {
-                        if (line_stops.find_first_of('>') != std::string::npos) {
-                            cicle_route = true;
-                            temp_for_parsing_route = Split(line_stops, ">");
-                        } else if (line_stops.find_last_not_of('-') != std::string::npos) {
-                            temp_for_parsing_route = Split(line_stops, "-");
-                        } else {
-                            break;
-                        }
-                        stopsInBus.push_back(temp_for_parsing_route.first);
-                        line_stops = temp_for_parsing_route.second;
-                        if (temp_for_parsing_route.second.empty()) {
-                            break;
-                        }
-                    }
-                    ref->buses->AddBus(bus_number, stopsInBus);
-                    //ф-я вставки расстояний между соседними остановками
-                    ref->buses->SetStopDistance(bus_number);
-                    ref->buses->FindBus(bus_number)->cicle_route = cicle_route;
-                }
-            }
-        }
-    };
-
-    void LoadLine(std::istream &input) {
-        int count_;
-        TransportCatalogue::Stops stops;
-        TransportCatalogue::Buses buses(&stops);
-        ListQueryIn list_queryIn;
-        refForPar references{};
-        references.list_queryIn = &list_queryIn;
-        references.stops = &stops;
-        references.buses = &buses;
-        StatReader::Print Print(&buses, &stops);
-
-        while (!input.eof()) {
-
-            input >> count_;
-            string line;
-            getline(input, line);
-
-            for (int i = 0; i < count_; i++) {
+            for (int i = 0; i < n; ++i) {
+                std::string line;
                 getline(input, line);
-                line = Lstrip(line);
 
-                if (!line.empty() && line.find_first_of(':') != std::string::npos) {
+                std::string word = line.substr(0, line.find_first_of(' '));
+                line.erase(0, word.size());
+                line.erase(0, line.find_first_not_of(' '));
 
-                    list_queryIn.AddQueryItem(line, &list_queryIn.AsMapIn(), nullptr);
+                if (word == "Bus"s) {
+                    ParseBus(std::move(line));
+                    continue;
+                }
 
-                } else {
-                    list_queryIn.AddQueryItem(line, nullptr, &list_queryIn.AsMapOut());
+                if (word == "Stop"s) {
+                    ParseStop(std::move(line));
                 }
             }
         }
 
-        AddStopBus(&references);
+        void InputReader::AddBuses(TransportCatalogue& catalog) {
+            for (BusInput& bus : buses_) {
+                catalog.AddBus(bus.name, bus.stops, bus.is_ring);
+            }
+        }
 
-        //проверка на условие того, что контейнер расстояний между соседними остановками не пуст
-        if (!list_queryIn.AsMapLength().empty() && !list_queryIn.AsMapLength().empty()) {
-            buses.SetStopLength(&list_queryIn.AsMapLength());
+        void InputReader::AddStops(TransportCatalogue& catalog) {
+            for (StopInput& stop : stops_) {
+                catalog.AddStop(stop.name, stop.coordinates);
+            }
         }
-        //проверка на условие того, что контейнер запросов не пуст
-        if (!list_queryIn.AsMapOut().empty() && list_queryIn.AsMapOut().size() > 0) {
-            Print.PrintValues(&list_queryIn.AsMapOut());
+
+        void InputReader::AddDistances(TransportCatalogue& catalog) {
+            for (StopInput& stop_lhs : stops_) {
+                for (auto& stop_rhs : stop_lhs.distances) {
+                    catalog.AddDistance(stop_lhs.name, stop_rhs.first, stop_rhs.second);
+                }
+            }
         }
+
+
+        void InputReader::ParseBus (std::string line) {
+
+            buses_.push_back({});
+            BusInput& bus = buses_.back();
+
+            bus.name = line.substr(0, line.find_first_of(':'));
+            line.erase(0, line.find_first_not_of(' ', 1 + bus.name.size()));
+
+            while (true) {
+                bus.stops.push_back(line.substr(0, 
+                    std::adjacent_find(line.begin(), line.end(), [](const auto& lhs, const auto& rhs) {
+                        return (rhs == ' ') && (lhs == '-' || lhs == '>');})
+                    -line.begin()));
+
+                line.erase(0, bus.stops.back().size());
+
+                if (line.empty()) {
+                    return;
+                }
+
+                bus.is_ring = line[0] != '-';
+
+                size_t pos = std::min(bus.stops.back().size(), bus.stops.back().find_last_not_of(' '));
+
+                if (pos == bus.stops.back().size()) {
+                    return;
+                }
+
+                bus.stops.back().erase(pos + 1);
+                line.erase(0, line.find_first_not_of(' ', 1));
+            }
+        }
+
+        void InputReader::ParseStop (std::string line) {
+
+            stops_.push_back({});
+            StopInput& stop = stops_.back();
+
+            stop.name = line.substr(0, line.find_first_of(':'));
+            line.erase(0, line.find_first_not_of(' ', stop.name.size() + 1));
+
+            int pos = line.find_first_of(',');
+            stop.coordinates.lat = std::stod(line.substr(0, pos));
+            line.erase(0, line.find_first_not_of(' ', pos + 1));
+
+            pos = line.find_first_of(',');
+            stop.coordinates.lng = std::stod(line.substr(0, pos));
+            line.erase(0, line.find_first_not_of(' ', pos + 1));
+
+            while (!line.empty()) {
+                size_t pos = line.find_first_of('m');
+                int distance = std::stoi(line.substr(0, pos));
+                line.erase(0, line.find_first_not_of(' ', line.find_first_not_of(' ', pos + 1) + 2));
+
+                pos = std::min(line.size(), line.find_first_of(','));
+                stop.distances.emplace_back(line.substr(0, pos), distance);
+
+                if (pos == line.size()) {
+                    return;
+                }
+
+                line.erase(0, line.find_first_not_of(' ', pos + 1));
+            }
+        }
+    }//aggregations
+
+
+    void ReadBase(aggregations::TransportCatalogue& catalog, std::istream& input) {
+        aggregations::InputReader reader(catalog, input);
+        reader.ParseBase();
+        reader.AddStops();
+        reader.AddDistances();
+        reader.AddBuses();
     }
-}
+
+    void ReadBase(aggregations::TransportCatalogue& catalog) {
+        ReadBase(catalog, std::cin);
+    }
+}//tr_cat

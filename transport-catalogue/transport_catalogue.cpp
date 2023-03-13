@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include "transport_catalogue.h"
 
 namespace tr_cat::aggregations {
@@ -10,9 +11,9 @@ namespace tr_cat::aggregations {
         stops_container_[stops_data_.back().name] = &(stops_data_.back());
     }
 
-    void TransportCatalogue::AddBus(std::string_view name, std::vector<std::string_view> &stops, const bool is_ring) {
+    void TransportCatalogue::AddBus(std::string_view name, std::vector<std::string> stops, const bool is_ring) {
 
-        auto it = std::ranges::lower_bound(buses_, name);
+        auto it = std::lower_bound(buses_.begin(), buses_.end(), name);
         if (it != buses_.end() && *it == name) {
             return;
         }
@@ -23,13 +24,13 @@ namespace tr_cat::aggregations {
 
         //добавление к каждой остановке названия этого автобуса
         for (std::string_view stop: stops) {
-            stops_container_[stop]->buses.insert(buses_data_.emplace_back().name);
+            stops_container_[stop]->buses.insert(buses_data_.back().name);
         }
 
         std::vector<Stop *> tmp_stops(stops.size());
 
         //из названий в указатели на существующие остановки
-        std::ranges::transform(stops, tmp_stops.begin(), [&](std::string_view element) {
+        std::transform(stops.begin(), stops.end(), tmp_stops.begin(), [&](std::string_view element) {
             return stops_container_[element];
         });
 
@@ -41,7 +42,7 @@ namespace tr_cat::aggregations {
 
         //запись указателей на уникальные остановки для подсчета
         std::unordered_set<Stop *> tmp_unique_stops;
-        std::ranges::for_each(tmp_stops, [&](Stop *element) {
+        std::for_each(tmp_stops.begin(), tmp_stops.end(), [&](Stop *element) {
             tmp_unique_stops.insert(element);
         });
         buses_data_.back().unique_stops = static_cast<int>(tmp_unique_stops.size());
@@ -57,7 +58,7 @@ namespace tr_cat::aggregations {
             buses_data_.back().is_ring = true;
         }
 
-        buses_data_.back().stops = move(tmp_stops);
+        buses_data_.back().stops = std::move(tmp_stops);
 
         buses_container_.try_emplace(buses_data_.back().name, &(buses_data_.back()));
 
@@ -87,48 +88,40 @@ namespace tr_cat::aggregations {
     }
 
     Stop *TransportCatalogue::FindStop(std::string_view name) const {
-        if (!stops_container_.contains(name)) {
+        if (!stops_container_.count(name)) {
             return nullptr;
         }
         return stops_container_.at(name);
     }
 
     Bus *TransportCatalogue::FindBus(std::string_view name) const {
-        if (!buses_container_.contains(name)) {
+        if (!buses_container_.count(name)) {
             return nullptr;
         }
         return buses_container_.at(name);
     }
 
     int TransportCatalogue::GetDistance(const Stop *lhs, const Stop *rhs) const {
-
-        if (distances_.contains({lhs, rhs})) {
+        if (distances_.count({lhs, rhs})) {
             return distances_.at({lhs, rhs});
         }
-
-        if (distances_.contains({rhs, lhs})) {
+        if (distances_.count({rhs, lhs})) {
             return distances_.at({rhs, lhs});
         }
-
         return static_cast<int>(geo::ComputeDistance(lhs->coordinates, rhs->coordinates));
     }
 
 
-    int TransportCatalogue::ComputeRouteDistance(std::string_view name) const {
+    int TransportCatalogue::ComputeRouteDistance (std::string_view name) const {
 
-        const Bus *bus = FindBus(name);
+        const Bus* bus = FindBus(name);
         int distance = 0;
-        if (FindBus(name) != nullptr) {
-            const std::vector<Stop *> &stops = bus->stops;
+        const std::vector<Stop*>& stops = bus->stops;
 
-            for (size_t i = 1; i < stops.size(); ++i) {
-                distance += GetDistance(stops[i - 1], stops[i]);
-            }
-            return distance;
+        for (size_t i = 1; i < stops.size(); ++i) {
+            distance += GetDistance(stops[i-1], stops[i]);
         }
-        else {
-            throw std::invalid_argument("empty");
-        }
+        return distance;
     }
 
     double TransportCatalogue::ComputeGeoRouteDistance(std::string_view name) const {
