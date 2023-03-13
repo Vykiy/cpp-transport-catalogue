@@ -357,7 +357,7 @@ namespace json {
         ctx.out << value;
     }
 
-    void PrintValue(const Array &value, const PrintContext &ctx, bool enter = true) {
+    void PrintValue(const Array &value, const PrintContext &ctx, bool) {
 
         auto print_elems = [&value](const PrintContext &ctx) {
             bool is_first = false;

@@ -1,8 +1,6 @@
 #include "transport_catalogue.h"
 #include "request_handler.h"
 #include "json_reader.h"
-#include "input_reader.h"
-#include "tests.h"
 
 
 #include <cassert>
