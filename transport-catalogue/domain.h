@@ -1,11 +1,10 @@
 #pragma once
 
+#include "geo.h"
+
 #include <string>
 #include <vector>    
 #include <set>
-#include <string_view>
-
-#include "geo.h"
 
 namespace tr_cat {
 

@@ -134,19 +134,19 @@ namespace svg {
             using namespace std::literals;
 
             if (fill_color_) {
-                out << R"( fill=")" << *fill_color_ << R"(")";
+                out << " fill=\""sv << *fill_color_ << "\""sv;
             }
             if (stroke_color_) {
-                out << R"( stroke=")" << *stroke_color_ << R"(")";
+                out << " stroke=\""sv << *stroke_color_ << "\""sv;
             }
             if (stroke_width_) {
-                out << R"( stroke-width=")" << *stroke_width_ << R"(")";
+                out << " stroke-width=\""sv << *stroke_width_ << "\""sv;
             }
             if (stroke_linecap_) {
-                out << R"( stroke-linecap=")" << *stroke_linecap_ << R"(")";
+                out << " stroke-linecap=\""sv << *stroke_linecap_ << "\""sv;
             }
             if (stroke_linejoin_) {
-                out << R"( stroke-linejoin=")" << *stroke_linejoin_ << R"(")";
+                out << " stroke-linejoin=\""sv << *stroke_linejoin_ << "\""sv;
             }
         }
 
@@ -190,9 +190,9 @@ namespace svg {
         Text& SetPosition(Point pos);
         Text& SetOffset(Point offset);
         Text& SetFontSize(uint32_t size);
-        Text& SetFontFamily(std::string_view font_family);
-        Text& SetFontWeight(std::string_view font_weight);
-        Text& SetData(std::string_view data);
+        Text& SetFontFamily(std::string font_family);
+        Text& SetFontWeight(std::string font_weight);
+        Text& SetData(std::string data);
     private:
         void RenderObject(const RenderContext& context) const override;
 

@@ -2,16 +2,15 @@
 #include "request_handler.h"
 #include "json_reader.h"
 
-
 #include <cassert>
 #include <fstream>
 #include <iostream>
 
+using namespace std;
+using namespace tr_cat;
+
 int main() {
-    using namespace std;
-    using namespace tr_cat;
     aggregations::TransportCatalogue catalog;
     interface::JsonReader reader(catalog);
-    Process(reader);
-//    tests::Test();
+    interface::Process(reader);
 }
