@@ -47,7 +47,7 @@ namespace json {
     private:
         struct KeyWithFlag {
             void operator() (std::string&& key) {
-                value = std::move(key);
+                value = move(key);
                 is_value = true;
             }
             std::string value;

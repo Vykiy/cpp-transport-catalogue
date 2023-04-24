@@ -1,12 +1,15 @@
 #pragma once
 
 #include "geo.h"
+#include "graph.h"
 
 #include <string>
 #include <vector>    
 #include <set>
 
 namespace tr_cat {
+
+    const double INNACURACY = 1e-6;
 
     struct Stop;
     struct Bus {
@@ -22,6 +25,7 @@ namespace tr_cat {
         std::string name;
         geo::Coordinates coordinates = {0, 0};
         std::set<std::string_view> buses;
+        graph::VertexId vertex_id;
     };
 
 } //tr_cat

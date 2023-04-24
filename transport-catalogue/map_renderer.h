@@ -4,7 +4,8 @@
 
 #include <ostream>
 
-namespace tr_cat::render {
+namespace tr_cat {
+    namespace render {
 
         inline bool IsZero(double value) {
             return std::abs(value) < EPSILON;
@@ -107,21 +108,20 @@ namespace tr_cat::render {
         class MapRenderer {
         public:
             MapRenderer() = delete;
-            MapRenderer(const aggregations::TransportCatalogue& catalog, const RenderSettings& settings)
-            :catalog_(catalog), settings_(settings) {}
-            MapRenderer(const aggregations::TransportCatalogue& catalog, const RenderSettings& settings, std::ostream& output)
-            :catalog_(catalog), settings_(settings), output_(output) {}
+            MapRenderer(const aggregations::TransportCatalogue& catalog)
+            :catalog_(catalog) {}
 
-            void Render();
+            void SetRenderSettings(RenderSettings&& settings) {settings_ = settings;}
+            void Render(std::ostream& out);
 
         private:
             const aggregations::TransportCatalogue& catalog_;
             RenderSettings settings_;
-            std::ostream& output_ = std::cout;
             std::unordered_set<geo::Coordinates, CoordinatesHasher> CollectCoordinates () const;
             std::pair<std::unique_ptr<svg::Text>, std::unique_ptr<svg::Text>> AddBusLabels(SphereProjector& project, 
                                                             int index_color, const Stop* stop, std::string_view name);
             std::set<std::string_view> RenderBuses(SphereProjector& project, svg::Document& doc_to_render);
             void RenderStops(SphereProjector& project, svg::Document& doc_to_render, std::set<std::string_view> stops_in_buses);
         };
-    }//tr_cat
+    }//render
+}//tr_cat

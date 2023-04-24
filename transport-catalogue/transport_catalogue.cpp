@@ -1,9 +1,10 @@
 #include "transport_catalogue.h"
 
-namespace tr_cat::aggregations {
+namespace tr_cat {
+    namespace aggregations {
         
         void TransportCatalogue::AddStop (std::string_view name, geo::Coordinates coords) {
-            stops_data_.push_back({move(static_cast<std::string>(name)), coords, {}});
+            stops_data_.push_back({move(static_cast<std::string>(name)), coords, {}, vertex_count_++});
             stops_container_[stops_data_.back().name] = &(stops_data_.back());
         }
 
@@ -86,20 +87,6 @@ namespace tr_cat::aggregations {
             return stop;
         }
 
-        Stop* TransportCatalogue::FindStop (std::string_view name) const {
-            if (!stops_container_.count(name)) {
-                return nullptr;
-            }
-            return stops_container_.at(name);
-        }
-
-        Bus* TransportCatalogue::FindBus (std:: string_view name) const {
-            if (!buses_container_.count(name)) {
-                return nullptr;
-            }
-            return buses_container_.at(name);
-        }
-
         int TransportCatalogue::GetDistance(const Stop* lhs, const Stop* rhs) const{
 
             if (distances_.count ({lhs, rhs})) {
@@ -113,6 +100,19 @@ namespace tr_cat::aggregations {
             return static_cast<int>(geo::ComputeDistance(lhs->coordinates, rhs->coordinates));
         }
 
+        Stop* TransportCatalogue::FindStop (std::string_view name) const {
+            if (!stops_container_.count(name)) {
+                return nullptr;
+            }
+            return stops_container_.at(name);
+        }
+
+        Bus* TransportCatalogue::FindBus (std:: string_view name) const {
+            if (!buses_container_.count(name)) {
+                return nullptr;
+            }
+            return buses_container_.at(name);
+        }
 
         int TransportCatalogue::ComputeRouteDistance (std::string_view name) const {
             
@@ -136,4 +136,5 @@ namespace tr_cat::aggregations {
             }
             return distance;
         }
-    }//tr_cat
+    }//aggregations
+}//tr_cat

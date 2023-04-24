@@ -3,7 +3,8 @@
 #include <cmath>
 inline const double EPSILON = 1e-6;
 
-namespace tr_cat::geo {
+namespace tr_cat {
+    namespace geo {
 
         struct Coordinates {
             double lat;
@@ -29,4 +30,5 @@ namespace tr_cat::geo {
         }
 
         
-    }//tr_cat
+    }//geo
+}//tr_cat

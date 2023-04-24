@@ -12,7 +12,7 @@ namespace svg {
 
     struct Rgb {
         Rgb() = default;
-        Rgb(unsigned int r, unsigned int g, unsigned int b)
+        Rgb(uint r, uint g, uint b)
         :red(r), green(g), blue(b) {}
         Rgb(int r, int g, int b)
         :red(r), green(g), blue(b) {}
@@ -23,7 +23,7 @@ namespace svg {
 
     struct Rgba {
         Rgba() = default;
-        Rgba(unsigned int r, unsigned int g, unsigned int b, double o)
+        Rgba(uint r, uint g, uint b, double o)
         :red(r), green(g), blue(b), opacity(o){}
         Rgba(int r, int g, int b, double o)
         :red(r), green(g), blue(b), opacity(o){}

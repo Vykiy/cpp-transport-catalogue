@@ -1,13 +1,14 @@
 #include "map_renderer.h"
 
 
-namespace tr_cat::render {
+namespace tr_cat {
+    namespace render {
         
         using namespace std;
         using namespace aggregations;
         using namespace svg;
 
-        void MapRenderer::Render() {
+        void MapRenderer::Render(ostream& out) {
             Document doc_to_render;
             auto coords = move(CollectCoordinates());
             SphereProjector project (coords.begin(), coords.end(), settings_.width, settings_.height, settings_.padding);
@@ -15,7 +16,7 @@ namespace tr_cat::render {
             set<string_view> stops_in_buses = move(RenderBuses(project, doc_to_render));
             RenderStops(project, doc_to_render, stops_in_buses);
 
-            doc_to_render.Render(output_);
+            doc_to_render.Render(out);
         }
 
         unordered_set<geo::Coordinates, CoordinatesHasher> MapRenderer::CollectCoordinates () const {
@@ -139,4 +140,5 @@ namespace tr_cat::render {
                 doc_to_render.AddPtr(move(pointer));
             }
         }
-    }//tr_cat
+    }//render
+}//tr_cat

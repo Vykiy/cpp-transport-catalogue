@@ -1,6 +1,7 @@
 #include "request_handler.h"
 
-namespace tr_cat::interface {
+namespace tr_cat {
+    namespace interface {
         using namespace std;
 
         void RequestInterface::AddStops () {
@@ -25,7 +26,7 @@ namespace tr_cat::interface {
                 if (stat.type == "Bus"s) {
                     optional<const Bus*> bus = catalog_.GetBusInfo(stat.name);
                     if (!bus) {
-                        answers_.push_back(stat.id);
+                        answers_.push_back(stat.id); //если не найдено, передаём id запроса
                         continue;
                     }
                     answers_.push_back(BusOutput{stat.id, *bus});
@@ -33,7 +34,7 @@ namespace tr_cat::interface {
                 } else if (stat.type == "Stop"s) {
                     optional<const Stop*> stop = catalog_.GetStopInfo(stat.name);
                     if (!stop) {
-                        answers_.push_back(stat.id);
+                        answers_.push_back(stat.id); //если не найдено, передаём id запроса
                         continue;
                     }
                     answers_.push_back(StopOutput{stat.id, *stop});
@@ -41,6 +42,14 @@ namespace tr_cat::interface {
                 } else if (stat.type == "Map"s) {
                     answers_.push_back(MapOutput(stat.id, catalog_));
 
+                } else if (stat.type == "Route"s) {
+                    optional<const Stop*> from = catalog_.GetStopInfo(stat.from);
+                    optional<const Stop*> to = catalog_.GetStopInfo(stat.to);
+                    if (!from || !to) {
+                        answers_.push_back(stat.id); //если не найдено, передаём id запроса
+                        continue;
+                    }
+                    answers_.push_back(RouteOutput({stat.id, *from, *to}));
                 } else {
                     throw invalid_argument ("Invalid Stat"s);
                 }
@@ -52,8 +61,10 @@ namespace tr_cat::interface {
             reader.AddStops();
             reader.AddDistances();
             reader.AddBuses();
+            reader.CreateGraph();
             reader.GetAnswers();
             reader.PrintAnswers();
         }
 
-    }//tr_cat
+    }//interface
+}//tr_cat

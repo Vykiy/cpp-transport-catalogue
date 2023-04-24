@@ -2,6 +2,7 @@
 
 #include "geo.h"
 #include "domain.h"
+#include "graph.h"
 
 #include <string>
 #include <list>
@@ -14,9 +15,9 @@
 #include <set>
 #include <cmath>
 #include <utility>
-#include <optional>
 
-namespace tr_cat::aggregations {
+namespace tr_cat {
+    namespace aggregations {
         using namespace std::string_literals;
 
         class TransportCatalogue {
@@ -26,6 +27,8 @@ namespace tr_cat::aggregations {
             void AddDistance(const std::string_view lhs, const std::string_view rhs, double distance);
             std::optional<const Bus*>  GetBusInfo (std::string_view name) const;
             std::optional<const Stop*> GetStopInfo (std::string_view name) const;
+            int GetDistance(const Stop* lhs, const Stop* rhs) const;
+            size_t GetVertexCount() const {return vertex_count_;}
             auto begin() const {return buses_.begin();}
             auto end() const {return buses_.end();}
             size_t size() const {return buses_.size();}
@@ -52,11 +55,12 @@ namespace tr_cat::aggregations {
             std::unordered_map<std::string_view, Stop*> stops_container_;
             std::unordered_map<std::string_view, Bus*> buses_container_;
             std::vector<std::string_view> buses_;
+            size_t vertex_count_ = 0;
 
             int ComputeRouteDistance (std::string_view name) const;
             double ComputeGeoRouteDistance (std::string_view name) const;
-            int GetDistance(const Stop* lhs, const Stop* rhs) const;
             Stop* FindStop (std::string_view name) const;
             Bus* FindBus (std:: string_view name)const;
         };
-    }//tr_cat
+    }//aggregations
+}//tr_cat
