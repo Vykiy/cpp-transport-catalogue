@@ -15,24 +15,23 @@
 #include <set>
 #include <cmath>
 #include <utility>
+#include <optional>
 
-namespace tr_cat {
-    namespace aggregations {
+namespace tr_cat::aggregations {
         using namespace std::string_literals;
 
         class TransportCatalogue {
         public:
             void AddStop (std::string_view name, geo::Coordinates coords);
-            void AddBus (std::string_view name, std::vector<std::string_view>& stops, const bool is_ring);
-            void AddDistance(const std::string_view lhs, const std::string_view rhs, double distance);
+            void AddBus (std::string_view name, const std::vector<std::string_view>& stops, bool is_ring);
+            void AddDistance(std::string_view lhs, std::string_view rhs, double distance);
             std::optional<const Bus*>  GetBusInfo (std::string_view name) const;
             std::optional<const Stop*> GetStopInfo (std::string_view name) const;
             int GetDistance(const Stop* lhs, const Stop* rhs) const;
-            size_t GetVertexCount() const {return vertex_count_;}
             auto begin() const {return buses_.begin();}
             auto end() const {return buses_.end();}
-            size_t size() const {return buses_.size();}
-            size_t empty() const {return buses_.empty();}
+            size_t cat_size() const {return buses_.size();}
+
         private:
             class DistanceHasher {
             public:
@@ -55,12 +54,10 @@ namespace tr_cat {
             std::unordered_map<std::string_view, Stop*> stops_container_;
             std::unordered_map<std::string_view, Bus*> buses_container_;
             std::vector<std::string_view> buses_;
-            size_t vertex_count_ = 0;
 
             int ComputeRouteDistance (std::string_view name) const;
             double ComputeGeoRouteDistance (std::string_view name) const;
             Stop* FindStop (std::string_view name) const;
             Bus* FindBus (std:: string_view name)const;
         };
-    }//aggregations
-}//tr_cat
+} // namespace tr_cat::aggregations//tr_cat

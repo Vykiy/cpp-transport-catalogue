@@ -55,7 +55,7 @@ namespace tr_cat::tests {
                     LOG_DURATION("    PARSING         "s);
                     reader.ParseDocument();
                 }
-                
+
                 {
                     LOG_DURATION("    ADD STOPS       "s);
                     reader.AddStops();
@@ -71,14 +71,14 @@ namespace tr_cat::tests {
                     reader.AddBuses();
                 }
             }
-            render::MapRenderer render(catalog, reader.GetRenderSettings(), outf);
-            {
-                LOG_DURATION("RENDERING"s);
-                {
-                    LOG_DURATION("    DRAWING     "s);
-                    render.Render();
-                }
-            }
+//            render::MapRenderer render(catalog, reader.GetRenderSettings(), outf);
+//            {
+//                LOG_DURATION("RENDERING"s);
+//                {
+//                    LOG_DURATION("    DRAWING     "s);
+//                    render.Render();
+//                }
+//            }
             std::cerr << "-----------------------------------\n\n"s;
         }
 
@@ -100,7 +100,7 @@ namespace tr_cat::tests {
                     LOG_DURATION("    PARSING         "s);
                     reader.ParseDocument();
                 }
-                
+
                 {
                     LOG_DURATION("    ADD STOPS       "s);
                     reader.AddStops();

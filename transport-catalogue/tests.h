@@ -5,35 +5,35 @@
 #include <string>
 
 #include "transport_catalogue.h"
-#include "log_duration.h"
 #include "request_handler.h"
 #include "json_reader.h"
+#include "log_duration.h"
 
 namespace tr_cat::tests {
         namespace detail {
 
             template <typename Type1, typename Type2>
             void AssertEqualImpl(const Type1& value1, const Type2 value2, const std::string& str_value1, const std::string& str_value2,
-                const std::string& file, const std::string& func, unsigned line, const std::string& hint = ""s) {
+                const std::string& file, const std::string& func, unsigned line, const std::string& hint = "") {
                 
                 if (value1 != static_cast<Type1>(value2)) {
-                    std::cerr << file << "("s << line << "): "s << func << ": ASSERT_EQUAL("s << str_value1 << ", "s << str_value2;
-                    std::cerr << ") failed: "s << value1 << " != "s << value2 << "."s;
+                    std::cerr << file << "(" << line << "): " << func << ": ASSERT_EQUAL(" << str_value1 << ", " << str_value2;
+                    std::cerr << ") failed: " << value1 << " != " << value2 << ".";
                     if (!hint.empty()) {
-                        std::cerr << " Hint: "s << hint;
+                        std::cerr << " Hint: " << hint;
                     }
                     std::cerr << std::endl;
                     abort();
                 }
             }
 
-            void AssertImpl(const bool value, const std::string& expr, const std::string& file, const std::string& func, 
-                                                                        unsigned line, const std::string& hint = ""s);
+            void AssertImpl(bool value, const std::string& expr, const std::string& file, const std::string& func,
+                                                                        unsigned line, const std::string& hint = "");
 
             template <typename Func>
             void RunTestImpl(Func func, const std::string& func_name) {
                 func();
-                std::cerr << func_name << " OK"s << std::endl;
+                std::cerr << func_name << " OK" << std::endl;
             }
 
         } //detail
@@ -47,7 +47,7 @@ namespace tr_cat::tests {
         #define RUN_TEST(func) detail::RunTestImpl((func), #func)
 
         void TestOutput();
-        void TestRenderSpeed(); 
+        void TestRenderSpeed();
         void TestCatalogSpeed();
         void Test();
     }//tr_cat

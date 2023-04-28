@@ -35,12 +35,12 @@ namespace tr_cat {
             if (graph_.GetVertexCount() > 0) {
                 throw std::logic_error("Recreate graph"s);
             }
-            graph_.SetVertexCount(catalog_.GetVertexCount());
-            const double kmh_to_mmin = 1000*1.0 / 60;
+            graph_.SetVertexCount(catalogue_.cat_size());
+            const double kmh_to_mmin = 1000 * 1.0 / 60;
             double bus_velocity = routing_settings_.bus_velocity * kmh_to_mmin;
 
-            for (std::string_view bus_name : catalog_) {
-                const Bus* bus = *(catalog_.GetBusInfo(bus_name));
+            for (std::string_view bus_name : catalogue_) {
+                const Bus* bus = *(catalogue_.GetBusInfo(bus_name));
                 auto it = bus->stops.begin();
                 if (it == bus->stops.end() || it + 1 == bus->stops.end()) {
                     continue;
@@ -48,7 +48,7 @@ namespace tr_cat {
                 for (; it + 1 != bus->stops.end(); ++it) {
                     double time = double(routing_settings_.bus_wait_time);
                     for (auto next_vertex = it + 1; next_vertex != bus->stops.end(); ++next_vertex) {
-                        time += catalog_.GetDistance(*prev(next_vertex), *next_vertex) / bus_velocity;
+                        time += catalogue_.GetDistance(*prev(next_vertex), *next_vertex) / bus_velocity;
                         edges_[graph_.AddEdge({ (*it)->vertex_id,
                                                 (*next_vertex)->vertex_id,
                                                 time})] = {*it,

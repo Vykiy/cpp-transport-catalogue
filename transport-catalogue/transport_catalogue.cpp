@@ -1,14 +1,14 @@
 #include "transport_catalogue.h"
 
-namespace tr_cat {
-    namespace aggregations {
+namespace tr_cat::aggregations {
         
         void TransportCatalogue::AddStop (std::string_view name, geo::Coordinates coords) {
-            stops_data_.push_back({move(static_cast<std::string>(name)), coords, {}, vertex_count_++});
+            size_t size = cat_size();
+            stops_data_.push_back({move(static_cast<std::string>(name)), coords, {}, size++});
             stops_container_[stops_data_.back().name] = &(stops_data_.back());
         }
 
-        void TransportCatalogue::AddBus (std::string_view name, std::vector<std::string_view>& stops, const bool is_ring) {
+        void TransportCatalogue::AddBus (std::string_view name, const std::vector<std::string_view>& stops, bool is_ring) {
 
             auto it = std::lower_bound(buses_.begin(), buses_.end(), name);
             if (it != buses_.end() && *it == name) {
@@ -30,7 +30,7 @@ namespace tr_cat {
 
             //если остановок нет
             if (tmp_stops.empty()) {
-                buses_container_.insert({buses_data_.back().name, &(buses_data_.back())});
+                buses_container_.try_emplace(buses_data_.back().name, &(buses_data_.back()));
                 return;
             }
 
@@ -53,7 +53,7 @@ namespace tr_cat {
 
             buses_data_.back().stops = move(tmp_stops);
 
-            buses_container_.insert({buses_data_.back().name, &(buses_data_.back())});
+            buses_container_.try_emplace(buses_data_.back().name, &(buses_data_.back()));
 
             buses_data_.back().distance = ComputeRouteDistance(name);
             buses_data_.back().curvature = buses_data_.back().distance / ComputeGeoRouteDistance(name);
@@ -136,5 +136,4 @@ namespace tr_cat {
             }
             return distance;
         }
-    }//aggregations
-}//tr_cat
+    }//tr_cat

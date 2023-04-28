@@ -8,11 +8,10 @@
 #include <set>
 #include <exception>
 
-namespace tr_cat {
+namespace tr_cat::router {
 
-namespace router {
 
-struct RoutingSettings {
+    struct RoutingSettings {
     int bus_wait_time = 0;
     int bus_velocity = 0;
 };
@@ -39,7 +38,7 @@ struct CompletedRoute {
 class TransportRouter  {
 public:
 
-    explicit TransportRouter (const aggregations::TransportCatalogue& catalog) :catalog_(catalog){}
+    explicit TransportRouter (const aggregations::TransportCatalogue& catalog) :catalogue_(catalog){}
 
     std::optional<CompletedRoute> ComputeRoute (graph::VertexId from, graph::VertexId to);
     void CreateGraph();
@@ -48,11 +47,11 @@ public:
 private:
     RoutingSettings routing_settings_;
     graph::DirectedWeightedGraph<double> graph_;
-    const aggregations::TransportCatalogue& catalog_;
+    const aggregations::TransportCatalogue& catalogue_;
     std::unordered_map<graph::EdgeId, EdgeInfo> edges_;
     std::unique_ptr<graph::Router<double>> router_;
 };
 
-}//interface
+//interface
 
 }//tr_cat

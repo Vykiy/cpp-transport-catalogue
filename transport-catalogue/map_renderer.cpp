@@ -54,7 +54,7 @@ namespace tr_cat {
             int color_counts = settings_.color_palette.size();
             vector<unique_ptr<Object>> bus_lines;
             vector<unique_ptr<Object>> bus_labels;
-            bus_lines.reserve(catalog_.size());
+            bus_lines.reserve(catalog_.cat_size());
             bus_labels.reserve(bus_lines.capacity()*4);
             set<string_view> stops_in_buses;
 
