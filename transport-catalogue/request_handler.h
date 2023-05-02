@@ -7,8 +7,7 @@
 #include <variant>
 #include <sstream>
 
-namespace tr_cat {
-    namespace interface {
+namespace tr_cat::interface {
         using namespace std::string_literals;
         class RequestInterface {
         public:
@@ -92,5 +91,4 @@ namespace tr_cat {
             
 
     
-    }//interface
-}//tr_cat
+    }//tr_cat

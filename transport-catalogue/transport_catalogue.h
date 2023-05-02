@@ -23,21 +23,21 @@ namespace tr_cat::aggregations {
         class TransportCatalogue {
         public:
             void AddStop (std::string_view name, geo::Coordinates coords);
-            void AddBus (std::string_view name, const std::vector<std::string_view>& stops, bool is_ring);
+            void AddBus (std::string_view name, std::vector<std::string_view>& stops, bool is_ring);
             void AddDistance(std::string_view lhs, std::string_view rhs, double distance);
             std::optional<const Bus*>  GetBusInfo (std::string_view name) const;
             std::optional<const Stop*> GetStopInfo (std::string_view name) const;
             int GetDistance(const Stop* lhs, const Stop* rhs) const;
+            size_t GetVertexCount() const {return vertex_count_;}
             auto begin() const {return buses_.begin();}
             auto end() const {return buses_.end();}
-            size_t cat_size() const {return buses_.size();}
-
+            size_t size() const {return buses_.size();}
         private:
             class DistanceHasher {
             public:
                 size_t operator() (const std::pair<const Stop*, const Stop*> element) const {
-                    const size_t shift = (size_t)log2(1 + sizeof(Stop));
-                    const size_t result = (size_t)(element.first) >> shift;
+                    const auto shift = (size_t)log2(1 + sizeof(Stop));
+                    const auto result = (size_t)(element.first) >> shift;
                     return result + ((size_t)(element.second) >> shift) * 37;
                 }
             };
@@ -54,10 +54,11 @@ namespace tr_cat::aggregations {
             std::unordered_map<std::string_view, Stop*> stops_container_;
             std::unordered_map<std::string_view, Bus*> buses_container_;
             std::vector<std::string_view> buses_;
+            size_t vertex_count_ = 0;
 
             int ComputeRouteDistance (std::string_view name) const;
             double ComputeGeoRouteDistance (std::string_view name) const;
             Stop* FindStop (std::string_view name) const;
             Bus* FindBus (std:: string_view name)const;
         };
-} // namespace tr_cat::aggregations//tr_cat
+    }//tr_cat

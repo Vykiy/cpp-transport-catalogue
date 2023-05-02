@@ -10,48 +10,47 @@
 
 namespace tr_cat::router {
 
+        struct RoutingSettings {
+            int bus_wait_time = 0;
+            int bus_velocity = 0;
+        };
 
-    struct RoutingSettings {
-    int bus_wait_time = 0;
-    int bus_velocity = 0;
-};
-
-struct EdgeInfo {
-    const Stop* stop;
-    const Bus* bus;
-    int count;
-};
+        struct EdgeInfo {
+            const Stop *stop;
+            const Bus *bus;
+            int count;
+        };
 
 
-struct CompletedRoute {
-    struct Line {
-        const Stop* stop; 
-        const Bus* bus; 
-        double wait_time;
-        double run_time;
-        int count_stops;
-    };
-    double total_time;
-    std::vector<Line> route;
-};
+        struct CompletedRoute {
+            struct Line {
+                const Stop *stop;
+                const Bus *bus;
+                double wait_time;
+                double run_time;
+                int count_stops;
+            };
+            double total_time;
+            std::vector<Line> route;
+        };
 
-class TransportRouter  {
-public:
+        class TransportRouter {
+        public:
 
-    explicit TransportRouter (const aggregations::TransportCatalogue& catalog) :catalogue_(catalog){}
+            explicit TransportRouter(const aggregations::TransportCatalogue &catalog) : catalog_(catalog) {}
 
-    std::optional<CompletedRoute> ComputeRoute (graph::VertexId from, graph::VertexId to);
-    void CreateGraph();
-    void SetSettings(RoutingSettings&& settings) {routing_settings_ = settings;}
+            std::optional<CompletedRoute> ComputeRoute(graph::VertexId from, graph::VertexId to);
 
-private:
-    RoutingSettings routing_settings_;
-    graph::DirectedWeightedGraph<double> graph_;
-    const aggregations::TransportCatalogue& catalogue_;
-    std::unordered_map<graph::EdgeId, EdgeInfo> edges_;
-    std::unique_ptr<graph::Router<double>> router_;
-};
+            void CreateGraph();
 
-//interface
+            void SetSettings(RoutingSettings &&settings) { routing_settings_ = settings; }
 
-}//tr_cat
+        private:
+            RoutingSettings routing_settings_;
+            graph::DirectedWeightedGraph<double> graph_;
+            const aggregations::TransportCatalogue &catalog_;
+            std::unordered_map<graph::EdgeId, EdgeInfo> edges_;
+            std::unique_ptr<graph::Router<double>> router_;
+        };
+
+    }//tr_cat

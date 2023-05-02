@@ -4,8 +4,7 @@
 
 #include <ostream>
 
-namespace tr_cat {
-    namespace render {
+namespace tr_cat::render {
 
         inline bool IsZero(double value) {
             return std::abs(value) < EPSILON;
@@ -123,5 +122,4 @@ namespace tr_cat {
             std::set<std::string_view> RenderBuses(SphereProjector& project, svg::Document& doc_to_render);
             void RenderStops(SphereProjector& project, svg::Document& doc_to_render, std::set<std::string_view> stops_in_buses);
         };
-    }//render
-}//tr_cat
+    }//tr_cat

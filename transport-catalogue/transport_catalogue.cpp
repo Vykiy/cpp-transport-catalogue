@@ -3,12 +3,11 @@
 namespace tr_cat::aggregations {
         
         void TransportCatalogue::AddStop (std::string_view name, geo::Coordinates coords) {
-            size_t size = cat_size();
-            stops_data_.push_back({move(static_cast<std::string>(name)), coords, {}, size++});
+            stops_data_.push_back({static_cast<std::string>(name), coords, {}, vertex_count_++});
             stops_container_[stops_data_.back().name] = &(stops_data_.back());
         }
 
-        void TransportCatalogue::AddBus (std::string_view name, const std::vector<std::string_view>& stops, bool is_ring) {
+        void TransportCatalogue::AddBus (std::string_view name, std::vector<std::string_view>& stops, const bool is_ring) {
 
             auto it = std::lower_bound(buses_.begin(), buses_.end(), name);
             if (it != buses_.end() && *it == name) {

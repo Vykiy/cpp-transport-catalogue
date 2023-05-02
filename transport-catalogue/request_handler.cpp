@@ -1,7 +1,6 @@
 #include "request_handler.h"
 
-namespace tr_cat {
-    namespace interface {
+namespace tr_cat::interface {
         using namespace std;
 
         void RequestInterface::AddStops () {
@@ -26,7 +25,7 @@ namespace tr_cat {
                 if (stat.type == "Bus"s) {
                     optional<const Bus*> bus = catalog_.GetBusInfo(stat.name);
                     if (!bus) {
-                        answers_.push_back(stat.id); //если не найдено, передаём id запроса
+                        answers_.emplace_back(stat.id); //если не найдено, передаём id запроса
                         continue;
                     }
                     answers_.push_back(BusOutput{stat.id, *bus});
@@ -66,5 +65,4 @@ namespace tr_cat {
             reader.PrintAnswers();
         }
 
-    }//interface
-}//tr_cat
+    }//tr_cat
