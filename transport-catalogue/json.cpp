@@ -126,7 +126,7 @@ Node LoadString(std::istream& input) {
         ++it;
     }
 
-    return move(Node(move(s)));
+    return Node(move(s));
 }
 
 Node LoadNull(istream& input) {
@@ -138,7 +138,7 @@ Node LoadNull(istream& input) {
     if (s != "null"s) {
         throw ParsingError("Unexpected value"s);
     }
-    return move(Node());
+    return Node();
 }
 
 Node LoadBool(istream& input) {
@@ -149,7 +149,7 @@ Node LoadBool(istream& input) {
     s += c;
 
     if (s == "true"s) {
-        return move(Node(true));
+        return Node(true);
     }
     if (s == "false"s) {
         return Node(false);
@@ -171,7 +171,7 @@ Node LoadArray(istream& input) {
         throw ParsingError("] not expected"s);
     }
 
-    return move(Node(move(result)));
+    return Node(move(result));
 }
 
 Node LoadDict(istream& input) {

@@ -12,7 +12,7 @@ namespace svg {
 
     struct Rgb {
         Rgb() = default;
-        Rgb(unsigned int r, unsigned int g, unsigned int b)
+        Rgb(uint r, uint g, uint b)
         :red(r), green(g), blue(b) {}
         Rgb(int r, int g, int b)
         :red(r), green(g), blue(b) {}
@@ -23,7 +23,7 @@ namespace svg {
 
     struct Rgba {
         Rgba() = default;
-        Rgba(unsigned int r, unsigned int g, unsigned int b, double o)
+        Rgba(uint r, uint g, uint b, double o)
         :red(r), green(g), blue(b), opacity(o){}
         Rgba(int r, int g, int b, double o)
         :red(r), green(g), blue(b), opacity(o){}
@@ -66,7 +66,7 @@ namespace svg {
     };
 
     struct RenderContext {
-        explicit RenderContext(std::ostream& out)
+        RenderContext(std::ostream& out)
             : out(out) {
         }
 
@@ -134,19 +134,19 @@ namespace svg {
             using namespace std::literals;
 
             if (fill_color_) {
-                out << R"( fill=")" << *fill_color_ << R"(")";
+                out << " fill=\""sv << *fill_color_ << "\""sv;
             }
             if (stroke_color_) {
-                out << R"( stroke=")" << *stroke_color_ << R"(")";
+                out << " stroke=\""sv << *stroke_color_ << "\""sv;
             }
             if (stroke_width_) {
-                out << R"( stroke-width=")" << *stroke_width_ << R"(")";
+                out << " stroke-width=\""sv << *stroke_width_ << "\""sv;
             }
             if (stroke_linecap_) {
-                out << R"( stroke-linecap=")" << *stroke_linecap_ << R"(")";
+                out << " stroke-linecap=\""sv << *stroke_linecap_ << "\""sv;
             }
             if (stroke_linejoin_) {
-                out << R"( stroke-linejoin=")" << *stroke_linejoin_ << R"(")";
+                out << " stroke-linejoin=\""sv << *stroke_linejoin_ << "\""sv;
             }
         }
 

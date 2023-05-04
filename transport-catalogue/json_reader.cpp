@@ -13,7 +13,9 @@ namespace tr_cat {
                 return;
             }
             auto& it = document_.GetRoot().AsMap();
-            ParseBase(it.at("base_requests"s));
+            if (it.count ("base_requests"s)){
+                ParseBase(it.at("base_requests"s));
+            }
             if (it.count("stat_requests"s) && (it.at("stat_requests"s).IsArray())) {
                 ParseStats(it.at("stat_requests"s));
             }
@@ -23,6 +25,11 @@ namespace tr_cat {
 
             if (it.count("routing_settings"s)) {
                 ParseRoutingSettings(it.at("routing_settings"s));
+            }
+
+            if (it.count ("serialization_settings"s)) {
+                serializator_.SetPathToSerialize(it.at("serialization_settings"s)
+                                    .AsMap().at ("file"s).AsString());
             }
 
         }
@@ -163,9 +170,13 @@ namespace tr_cat {
         void JsonReader::ParseRoutingSettings (json::Node& routing_settings) {
 
             auto& settings = routing_settings.AsMap();
-
-            transport_router_.SetSettings({settings.at("bus_wait_time"s).AsInt(),
-                                           settings.at("bus_velocity"s).AsInt()});
+            int velocity = settings.at("bus_velocity"s).AsInt();
+            int wait_time = settings.at("bus_wait_time"s).AsInt();
+            if (velocity < 0 || wait_time < 0 || velocity > 1000 || wait_time > 1000) {
+                throw invalid_argument("invalid routing_settings: 0 <= velocity, wait_time <= 1000"s);
+            }
+            transport_router_.SetSettings({static_cast<uint32_t>(wait_time),
+                                           static_cast<uint32_t>(velocity)});
 
         }
 
@@ -174,10 +185,10 @@ namespace tr_cat {
             json::Builder builder;
             builder.StartArray();
             for (auto& answer : answers_) {
-                builder.Value(move(visit(CreateNode{renderer_, transport_router_}, answer)));
+                builder.Value(visit(CreateNode{renderer_, transport_router_}, answer));
             }
             builder.EndArray();
-            document_answers_ = move(builder.Build());
+            document_answers_ = builder.Build();
         }  
 
         void JsonReader::PrintAnswers() {
@@ -241,7 +252,7 @@ namespace tr_cat {
                                     .Key("time"s).Value(line.wait_time)
                                     .Key("type"s).Value("Wait"s).EndDict()
                        .StartDict() .Key("bus"s).Value(line.bus->name)
-                                    .Key("span_count"s).Value(line.count_stops)
+                                    .Key("span_count"s).Value(static_cast<int>(line.count_stops))
                                     .Key("time"s).Value(line.run_time)
                                     .Key("type").Value("Bus"s).EndDict();
             }

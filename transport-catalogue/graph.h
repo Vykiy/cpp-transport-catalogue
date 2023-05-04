@@ -4,6 +4,7 @@
 
 #include <cstdlib>
 #include <vector>
+#include <graph.pb.h>
 
 namespace graph {
 
@@ -34,6 +35,19 @@ public:
     size_t GetEdgeCount() const;
     const Edge<Weight>& GetEdge(EdgeId edge_id) const;
     IncidentEdgesRange GetIncidentEdges(VertexId vertex) const;
+
+    transport_catalog_serialize::Graph GetSerializeData() const {
+        transport_catalog_serialize::Graph graph;
+        for (const Edge<double>& edge : edges_) {
+            transport_catalog_serialize::Edge edge_out;
+            edge_out.set_from(static_cast<uint32_t>(edge.from));
+            edge_out.set_to(static_cast<uint32_t>(edge.to));
+            edge_out.set_weight(edge.weight);
+            graph.add_edges();
+            *graph.mutable_edges(graph.edges_size()-1) = edge_out;
+        }
+        return graph;
+    }
 
 private:
     std::vector<Edge<Weight>> edges_;
